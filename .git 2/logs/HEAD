@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 344a7617421b72ec72ac188f740969be021f3e0b affeemchii <affan2k05@gmail.com> 1781123157 +0500	commit (initial): feat: initialize Gadget application with Shopify integration and boilerplate models
+344a7617421b72ec72ac188f740969be021f3e0b c877fdec00364dd630dbbc710961ebc7cf20ee4d affeemchii <affan2k05@gmail.com> 1781123418 +0500	commit: feat: add comprehensive Gadget development best practices documentation and initialize new app route
+c877fdec00364dd630dbbc710961ebc7cf20ee4d ff94f41d3b6bda94199a4bbf1195ba4221cde89a affeemchii <affan2k05@gmail.com> 1781125121 +0500	commit: feat: initialize Shopify product model with CRUD actions, access control filters, and a management table UI
+ff94f41d3b6bda94199a4bbf1195ba4221cde89a 800ac0b3c258a2673511b7d95b0d845362c1e834 affeemchii <affan2k05@gmail.com> 1781520357 +0500	commit: feat: implement rich text editor and product update functionality in Shopify product management UI
+800ac0b3c258a2673511b7d95b0d845362c1e834 24e920cd2cbb3f2ee1379e6ed9417ef5204d8612 affeemchii <affan2k05@gmail.com> 1781520454 +0500	commit: chore: generate temporary drive upload artifacts
+24e920cd2cbb3f2ee1379e6ed9417ef5204d8612 56b0772c7d9b5afc683b9e23efd29118a846a7bb affeemchii <affan2k05@gmail.com> 1781520468 +0500	commit: chore: batch upload temporary drive files to sync workspace state
