@@ -10,7 +10,8 @@ export function NavMenu() {
     <>
       {/* @ts-expect-error Property 's-app-nav' does not exist on type 'JSX.IntrinsicElements' */}
       <s-app-nav>
-        <s-link href="/">Home</s-link>
+        <s-link href="/">Products</s-link>
+        <s-link href="/new-product">Add Product</s-link>
         {/* @ts-expect-error Property 's-app-nav' does not exist on type 'JSX.IntrinsicElements' */}
       </s-app-nav>
     </>

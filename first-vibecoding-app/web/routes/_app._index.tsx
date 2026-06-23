@@ -1,6 +1,7 @@
 import { AutoTable } from "@gadgetinc/react/auto/polaris-wc";
 import { api } from "../api";
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router";
 
 type EditingProduct = {
   id: string;
@@ -68,6 +69,7 @@ const HEADING_OPTIONS = [
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
   const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
   const [status, setStatus]   = useState("");
   const [body,   setBody]     = useState("");
@@ -182,6 +184,17 @@ export default function Index() {
   // ── render ────────────────────────────────────────────────────────────────
   return (
     <s-page heading="Products">
+
+      {/* ── Add Product primary action ──────────────────────────────────── */}
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        id="add-product-btn"
+        onClick={() => navigate("/new-product")}
+      >
+        + Add Product
+      </s-button>
+
       <s-section>
         <AutoTable
           //@ts-ignore
@@ -442,18 +455,14 @@ export default function Index() {
         )}
 
         {/* Primary action */}
-        <div slot="primaryAction">
-          <s-button variant="primary" loading={saving} onClick={handleSave}>
-            Save
-          </s-button>
-        </div>
+        <s-button slot="primary-action" variant="primary" loading={saving} onClick={handleSave}>
+          Save
+        </s-button>
 
         {/* Secondary action */}
-        <div slot="secondaryActions">
-          <s-button commandFor="edit-product-modal" command="--hide" onClick={closeEdit}>
-            Cancel
-          </s-button>
-        </div>
+        <s-button slot="secondary-actions" commandFor="edit-product-modal" command="--hide" onClick={closeEdit}>
+          Cancel
+        </s-button>
       </s-modal>
     </s-page>
   );

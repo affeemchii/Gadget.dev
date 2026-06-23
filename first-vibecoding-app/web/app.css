@@ -206,3 +206,10 @@
   font-size: 13px;
   overflow-x: auto;
 }
+
+/* Placeholder text when editor is empty */
+.visual-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #8c9196;
+  pointer-events: none;
+}
