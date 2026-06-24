@@ -1,6 +1,6 @@
 import { AutoTable } from "@gadgetinc/react/auto/polaris-wc";
 import { api } from "../api";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type EditingProduct = {
   id: string;
@@ -331,23 +331,10 @@ export default function Index() {
   };
 
   return (
-    <div style={{ position: "relative" }}>
-      {/* ── Fixed Action Button at Top Right of App Content ───────────────── */}
-      <div style={{ position: "absolute", top: "24px", right: "24px", zIndex: 9999 }}>
-        <button
-          onClick={openAddForm}
-          className="add-product-cta"
-          style={{ boxShadow: "0 4px 12px rgba(0, 128, 96, 0.4)", transform: "scale(1.05)" }}
-        >
-          <Icon d={ICONS.plus} size={18} />
-          Add Product
-        </button>
-      </div>
-
-      <s-page heading="Products">
-        {/* ════════════════════════════════════════════════════════════════
-            ADD PRODUCT BUTTON — own section, outside shadow-DOM of table
-        ════════════════════════════════════════════════════════════════ */}
+    <s-page heading="Products">
+      {/* ════════════════════════════════════════════════════════════════
+          ADD PRODUCT BUTTON — own section, outside shadow-DOM of table
+      ════════════════════════════════════════════════════════════════ */}
       <s-section>
         <div className="add-product-bar">
           <div className="add-product-bar-left">
@@ -830,6 +817,5 @@ export default function Index() {
         </div>
       </s-modal>
     </s-page>
-    </div>
   );
 }
