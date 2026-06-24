@@ -9,7 +9,7 @@
     "shopify": "shopify",
     "shopify:config:use:development": "shopify app config use shopify.app.development.toml",
     "shopify:config:use:production": "shopify app config use shopify.app.toml",
-    "shopify:dev": "yarn shopify:deploy:development --force && yarn shopify:config:use:development && shopify app dev --no-update",
+    "shopify:dev": "yarn shopify:deploy:development  && yarn shopify:config:use:development && shopify app dev --no-update",
     "shopify:deploy:development": "yarn shopify:config:use:development && shopify app deploy",
     "shopify:deploy:production": "yarn shopify:config:use:production && shopify app deploy",
     "shopify:deploy": "yarn shopify:deploy:production",
@@ -42,3 +42,5 @@
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
+
+

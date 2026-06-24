@@ -1,12 +1,79 @@
 /** put your app's css here */
 
-/* ─── Toolbar Shell ─────────────────────────────────────────────────── */
+/* ─── Add Product Bar ───────────────────────────────────────────────── */
+.add-product-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f6f6f7 0%, #ffffff 100%);
+  border: 1px solid #e1e3e5;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.add-product-bar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-product-bar-title {
+  font-size: 16px;
+  font-weight: 650;
+  color: #202223;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.add-product-bar-sub {
+  font-size: 13px;
+  color: #6d7175;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.add-product-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #008060 0%, #00a67e 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 128, 96, 0.30);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.add-product-cta:hover {
+  background: linear-gradient(135deg, #006e52 0%, #008060 100%);
+  box-shadow: 0 4px 12px rgba(0, 128, 96, 0.40);
+  transform: translateY(-1px);
+}
+
+.add-product-cta:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 128, 96, 0.25);
+}
+
+.add-product-cta svg {
+  flex-shrink: 0;
+}
+
+/* ─── Toolbar Shell ───────────────────────────────────────────────── */
 .formatting-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
-  padding: 6px 8px;
+  gap: 1px;
+  padding: 4px 6px;
   background: linear-gradient(to bottom, #ffffff, #f6f6f7);
   border: 1px solid #c9cdd3;
   border-bottom: 1px solid #dcdfe3;
@@ -162,16 +229,16 @@
   pointer-events: none;
 }
 
-/* ─── Visual Editor ──────────────────────────────────────────────────── */
+/* ─── Visual Editor ──────────────────────────────────────────────── */
 .visual-editor {
-  min-height: 260px;
-  max-height: 480px;
+  min-height: 160px;
+  max-height: 240px;
   overflow-y: auto;
   border: 1px solid #c9cdd3;
   border-top: none;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
-  padding: 14px 16px;
+  padding: 10px 14px;
   background: #ffffff;
   outline: none;
   font-family: Arial, sans-serif;
