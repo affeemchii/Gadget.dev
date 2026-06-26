@@ -43,6 +43,13 @@ const ICONS = {
   clear: "M3.27 5L2 6.27l6.97 6.97L6.5 19h3l1.57-3.66L16.73 21 18 19.73 3.55 5.27 3.27 5zM6 5v.18L8.82 8h2.4l-.72 1.68 2.1 2.1L14.21 8H20V5H6z",
   textColor: "M11 3L5.5 17h2.25l1.12-3h6.25l1.12 3h2.25L13 3h-2zm-1.38 9L12 5.67 14.38 12H9.62z",
   plus: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",
+  // Action column icons
+  // Toggle / status switch
+  editStatus: "M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z",
+  // Pencil / edit
+  editDesc: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+  // Trash / delete
+  trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
 };
 
 // ── Font & size options ──────────────────────────────────────────────────────
@@ -68,6 +75,90 @@ const HEADING_OPTIONS = [
   { label: "Blockquote", cmd: "formatBlock", val: "<blockquote>" },
 ];
 
+// ── Self-contained icon button with tooltip (fixed-position, never clipped) ────
+function TooltipBtn({
+  label, color, hoverBg, iconPath, onClick,
+}: {
+  label: string;
+  color: string;
+  hoverBg: string;
+  iconPath: string;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const [show, setShow] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const handleEnter = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setCoords({
+        top: r.top + window.scrollY - 10,   // 10px above the button
+        left: r.left + window.scrollX + r.width / 2,
+      });
+    }
+    setShow(true);
+  };
+
+  return (
+    <div style={{ position: "relative", display: "inline-flex" }}>
+      <button
+        ref={btnRef}
+        onClick={onClick}
+        onMouseEnter={handleEnter}
+        onMouseLeave={() => setShow(false)}
+        style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: "30px", height: "30px", padding: 0, border: "none",
+          borderRadius: "6px",
+          background: show ? hoverBg : "transparent",
+          cursor: "pointer", color,
+          transition: "background 0.15s",
+          flexShrink: 0,
+        }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d={iconPath} />
+        </svg>
+      </button>
+
+      {/* Tooltip rendered in fixed-position so it's never clipped */}
+      {show && (
+        <div style={{
+          position: "fixed",
+          top: coords.top,
+          left: coords.left,
+          transform: "translate(-50%, -100%)",
+          background: "#1a1a1a",
+          color: "#fff",
+          fontSize: "12px",
+          fontWeight: 500,
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          lineHeight: 1.3,
+          padding: "5px 10px",
+          borderRadius: "6px",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          zIndex: 99999,
+          boxShadow: "0 3px 10px rgba(0,0,0,0.30)",
+        }}>
+          {label}
+          <div style={{
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 0, height: 0,
+            borderLeft: "5px solid transparent",
+            borderRight: "5px solid transparent",
+            borderTop: "5px solid #1a1a1a",
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Index() {
   // ── edit-existing state ───────────────────────────────────────────────────
   const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
@@ -76,6 +167,14 @@ export default function Index() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
+
+  // ── edit-status state ──────────────────────────────────────────────────────
+  const [statusProduct, setStatusProduct] = useState<{ id: string; title: string; status: string } | null>(null);
+  const [editingStatus, setEditingStatus] = useState("");
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [statusSaved, setStatusSaved] = useState(false);
+  const editStatusModalRef = useRef<HTMLElement>(null);
 
   // ── add-product state ──────────────────────────────────────────────────────
   const [showAddForm, setShowAddForm] = useState(false);
@@ -107,6 +206,10 @@ export default function Index() {
   const editModalRef = useRef<HTMLElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const newEditorRef = useRef<HTMLDivElement>(null);
+  const deleteConfirmModalRef = useRef<HTMLElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ── workaround for duplicate checkboxes in AutoTable ───────────────────────
   const autoTableWrapperRef = useRef<HTMLDivElement>(null);
@@ -133,6 +236,37 @@ export default function Index() {
     return () => observer.disconnect();
   });
 
+  // ── prevent scroll-lock layout shift when s-modal opens ───────────────────
+  useEffect(() => {
+    // When s-modal opens it sets body overflow:hidden which removes the
+    // scrollbar and shifts the page left. Compensate by watching for that
+    // change and adding padding-right equal to the scrollbar width.
+    const getScrollbarWidth = () =>
+      window.innerWidth - document.documentElement.clientWidth;
+
+    const applyLockFix = () => {
+      const isLocked =
+        document.body.style.overflow === "hidden" ||
+        document.body.style.overflowY === "hidden";
+      if (isLocked) {
+        const sw = getScrollbarWidth();
+        document.body.style.paddingRight = sw > 0 ? `${sw}px` : "";
+        document.documentElement.style.paddingRight = sw > 0 ? `${sw}px` : "";
+      } else {
+        document.body.style.paddingRight = "";
+        document.documentElement.style.paddingRight = "";
+      }
+    };
+
+    const bodyObserver = new MutationObserver(applyLockFix);
+    bodyObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    return () => bodyObserver.disconnect();
+  }, []);
+
   // ── open / close edit helpers ──────────────────────────────────────────────
   const openEdit = (record: any) => {
     setEditingProduct({
@@ -147,6 +281,7 @@ export default function Index() {
     setEditMode(true);
 
     setTimeout(() => {
+      (editModalRef.current as any)?.showOverlay?.();
       if (editorRef.current) {
         editorRef.current.innerHTML = record.body ?? "";
         syncFormats();
@@ -200,13 +335,61 @@ export default function Index() {
     }
   };
 
-  // ── delete product ─────────────────────────────────────────────────────────
-  const handleDelete = async (record: any) => {
-    if (!confirm(`Delete "${record.title ?? "this product"}"? This cannot be undone.`)) return;
+  // ── open edit-status modal ────────────────────────────────────────────────
+  const openEditStatus = (record: any) => {
+    setStatusProduct({ id: record.id, title: record.title ?? "Untitled Product", status: record.status ?? "active" });
+    setEditingStatus(record.status ?? "active");
+    setStatusError(null);
+    setStatusSaved(false);
+    setTimeout(() => (editStatusModalRef.current as any)?.showOverlay?.(), 30);
+  };
+
+  const closeEditStatus = () => {
+    setStatusProduct(null);
+    setStatusError(null);
+    setStatusSaved(false);
+    (editStatusModalRef.current as any)?.hideOverlay?.();
+  };
+
+  const handleSaveStatus = async () => {
+    if (!statusProduct) return;
+    setStatusSaving(true);
+    setStatusError(null);
     try {
-      await (api.shopifyProduct as any).delete(record.id);
+      await api.shopifyProduct.update(statusProduct.id, { status: editingStatus });
+      setStatusSaved(true);
+      setTimeout(() => closeEditStatus(), 1200);
     } catch (err: any) {
-      alert(err?.message ?? "Failed to delete product. Please try again.");
+      setStatusError(err?.message ?? "Failed to update status.");
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  // ── delete product (modal-based) ───────────────────────────────────────────
+  const openDeleteConfirm = (record: any) => {
+    setDeleteTarget({ id: record.id, title: record.title ?? "this product" });
+    setDeleteError(null);
+    setTimeout(() => (deleteConfirmModalRef.current as any)?.showOverlay?.(), 30);
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteTarget(null);
+    setDeleteError(null);
+    (deleteConfirmModalRef.current as any)?.hideOverlay?.();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await (api.shopifyProduct as any).delete(deleteTarget.id);
+      closeDeleteConfirm();
+    } catch (err: any) {
+      setDeleteError(err?.message ?? "Failed to delete product. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -369,19 +552,45 @@ export default function Index() {
               {
                 header: "Actions",
                 render: ({ record }: { record: any }) => (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <s-button
-                      commandFor="edit-product-modal"
-                      onClick={(e: any) => { e.stopPropagation(); openEdit(record); }}
-                    >
-                      Edit Description
-                    </s-button>
-                    <s-button
-                      tone="critical"
-                      onClick={(e: any) => { e.stopPropagation(); handleDelete(record); }}
-                    >
-                      Delete
-                    </s-button>
+                  <div style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0px",
+                    background: "#ffffff",
+                    border: "1px solid #e1e3e5",
+                    borderRadius: "8px",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                    padding: "2px",
+                    overflow: "visible",
+                    position: "relative",
+                  }}>
+                    <TooltipBtn
+                      label="Edit Status"
+                      color="#2563eb"
+                      hoverBg="#dbeafe"
+                      iconPath={ICONS.editStatus}
+                      onClick={(e) => { e.stopPropagation(); openEditStatus(record); }}
+                    />
+
+                    <span style={{ width: "1px", height: "18px", background: "#e1e3e5", flexShrink: 0 }} />
+
+                    <TooltipBtn
+                      label="Edit Description"
+                      color="#008060"
+                      hoverBg="#d1fae5"
+                      iconPath={ICONS.editDesc}
+                      onClick={(e) => { e.stopPropagation(); openEdit(record); }}
+                    />
+
+                    <span style={{ width: "1px", height: "18px", background: "#e1e3e5", flexShrink: 0 }} />
+
+                    <TooltipBtn
+                      label="Delete Product"
+                      color="#bf0711"
+                      hoverBg="#fee2e2"
+                      iconPath={ICONS.trash}
+                      onClick={(e) => { e.stopPropagation(); openDeleteConfirm(record); }}
+                    />
                   </div>
                 ),
               },
@@ -814,6 +1023,90 @@ export default function Index() {
           <s-button commandFor="edit-product-modal" command="--hide" onClick={closeEdit}>
             Cancel
           </s-button>
+        </div>
+      </s-modal>
+
+      {/* ── Edit Status Modal ───────────────────────────────────────────────── */}
+      <s-modal
+        ref={editStatusModalRef as any}
+        id="edit-status-modal"
+        heading={statusProduct ? `Edit Status — ${statusProduct.title}` : "Edit Status"}
+        onHide={closeEditStatus}
+      >
+        {statusProduct && (
+          <s-box padding="large">
+            <s-stack gap="large">
+              {statusSaved && (
+                <s-banner tone="success">
+                  <s-text>✅ Status updated successfully!</s-text>
+                </s-banner>
+              )}
+              {statusError && (
+                <s-banner tone="critical">
+                  <s-text>{statusError}</s-text>
+                </s-banner>
+              )}
+              <s-select
+                label="Product Status"
+                value={editingStatus}
+                onChange={(e: any) => setEditingStatus(e.target.value)}
+                id="edit-status-select"
+              >
+                <s-option value="active">🟢 Active</s-option>
+                <s-option value="draft">🟡 Draft</s-option>
+                <s-option value="archived">🔴 Archived</s-option>
+              </s-select>
+            </s-stack>
+          </s-box>
+        )}
+        <div slot="primaryAction">
+          <s-button
+            id="save-status-btn"
+            variant="primary"
+            loading={statusSaving}
+            onClick={handleSaveStatus}
+          >
+            {statusSaved ? "✅ Saved!" : "Save Status"}
+          </s-button>
+        </div>
+        <div slot="secondaryActions">
+          <s-button id="cancel-status-btn" onClick={closeEditStatus}>Cancel</s-button>
+        </div>
+      </s-modal>
+
+      {/* ── Delete Confirm Modal ────────────────────────────────────────────── */}
+      <s-modal
+        ref={deleteConfirmModalRef as any}
+        id="delete-confirm-modal"
+        heading="Delete Product"
+        onHide={closeDeleteConfirm}
+      >
+        {deleteTarget && (
+          <s-box padding="large">
+            <s-stack gap="base">
+              {deleteError && (
+                <s-banner tone="critical">
+                  <s-text>{deleteError}</s-text>
+                </s-banner>
+              )}
+              <s-text>
+                Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
+              </s-text>
+            </s-stack>
+          </s-box>
+        )}
+        <div slot="primaryAction">
+          <s-button
+            id="confirm-delete-btn"
+            tone="critical"
+            loading={deleting}
+            onClick={handleDelete}
+          >
+            Delete Product
+          </s-button>
+        </div>
+        <div slot="secondaryActions">
+          <s-button id="cancel-delete-btn" onClick={closeDeleteConfirm}>Cancel</s-button>
         </div>
       </s-modal>
     </s-page>

@@ -1,5 +1,12 @@
 /** put your app's css here */
 
+/* Prevent layout shift when modals open/close (scrollbar gutter always reserved) */
+html {
+  scrollbar-gutter: stable both-edges;
+  overflow-y: scroll; /* fallback: always show scrollbar so removing it has no layout effect */
+}
+
+
 /* ─── Add Product Bar ───────────────────────────────────────────────── */
 .add-product-bar {
   display: flex;
@@ -280,3 +287,90 @@
   color: #8c9196;
   pointer-events: none;
 }
+
+/* ─── Action column icon buttons ────────────────────────────────────────── */
+.action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, box-shadow 0.15s ease, transform 0.10s ease;
+  color: #6d7175;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.action-icon-btn svg {
+  pointer-events: none;
+}
+
+/* Edit Status — blue */
+.action-icon-btn--status {
+  color: #3b82f6;
+}
+.action-icon-btn--status:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.25);
+  transform: translateY(-1px);
+}
+.action-icon-btn--status:active {
+  background: #dbeafe;
+  border-color: #60a5fa;
+  transform: translateY(0);
+  box-shadow: none;
+}
+.action-icon-btn--status:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.30);
+}
+
+/* Edit Description — green */
+.action-icon-btn--edit {
+  color: #008060;
+}
+.action-icon-btn--edit:hover {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #005c47;
+  box-shadow: 0 1px 4px rgba(0, 128, 96, 0.25);
+  transform: translateY(-1px);
+}
+.action-icon-btn--edit:active {
+  background: #d1fae5;
+  border-color: #34d399;
+  transform: translateY(0);
+  box-shadow: none;
+}
+.action-icon-btn--edit:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.30);
+}
+
+/* Delete — red */
+.action-icon-btn--delete {
+  color: #bf0711;
+}
+.action-icon-btn--delete:hover {
+  background: #fff1f0;
+  border-color: #fca5a5;
+  color: #991b1b;
+  box-shadow: 0 1px 4px rgba(191, 7, 17, 0.22);
+  transform: translateY(-1px);
+}
+.action-icon-btn--delete:active {
+  background: #fee2e2;
+  border-color: #f87171;
+  transform: translateY(0);
+  box-shadow: none;
+}
+.action-icon-btn--delete:focus-visible {
+  box-shadow: 0 0 0 3px rgba(191, 7, 17, 0.25);
+}
+
