@@ -176,14 +176,26 @@ export default function Index() {
   const [statusSaved, setStatusSaved] = useState(false);
   const editStatusModalRef = useRef<HTMLElement>(null);
 
-  // ── add-product state ──────────────────────────────────────────────────────
+  // ── add-product state (Shopify-styled) ─────────────────────────────────────
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newVendor, setNewVendor] = useState("");
   const [newProductType, setNewProductType] = useState("");
+  const [newCategory, setNewCategory] = useState("");
   const [newStatus, setNewStatus] = useState("draft");
   const [newTags, setNewTags] = useState("");
   const [newBody, setNewBody] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [newCompareAtPrice, setNewCompareAtPrice] = useState("");
+  const [newChargeTax, setNewChargeTax] = useState(true);
+  const [newCostPerItem, setNewCostPerItem] = useState("");
+  const [newSku, setNewSku] = useState("");
+  const [newBarcode, setNewBarcode] = useState("");
+  const [newTrackQuantity, setNewTrackQuantity] = useState(true);
+  const [newQuantity, setNewQuantity] = useState("");
+  const [newPhysicalProduct, setNewPhysicalProduct] = useState(true);
+  const [newWeight, setNewWeight] = useState("");
+  const [newWeightUnit, setNewWeightUnit] = useState("lb");
   const [newSaving, setNewSaving] = useState(false);
   const [newSaveError, setNewSaveError] = useState<string | null>(null);
   const [newSaved, setNewSaved] = useState(false);
@@ -211,61 +223,79 @@ export default function Index() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ── workaround for duplicate checkboxes in AutoTable ───────────────────────
-  const autoTableWrapperRef = useRef<HTMLDivElement>(null);
+  // ── bulk selection state ──────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    // Gadget AutoTable manually renders checkboxes, but also passes 'selectable' 
-    // to the underlying s-table, causing duplicate checkbox columns.
-    // We use a MutationObserver to forcefully remove the 'selectable' attribute 
-    // from s-table so only the AutoTable checkboxes remain.
-    const sTable = autoTableWrapperRef.current?.querySelector("s-table");
-    if (!sTable) return;
+  // ── bulk edit-status state ────────────────────────────────────────────────
+  const [bulkStatus, setBulkStatus] = useState("draft");
+  const [bulkStatusSaving, setBulkStatusSaving] = useState(false);
+  const [bulkStatusError, setBulkStatusError] = useState<string | null>(null);
+  const [bulkStatusSaved, setBulkStatusSaved] = useState(false);
+  const bulkStatusModalRef = useRef<HTMLElement>(null);
 
-    const hideInnerSelectable = () => {
-      if (sTable.hasAttribute("selectable")) {
-        sTable.removeAttribute("selectable");
-      }
-    };
-    
-    hideInnerSelectable();
-    
-    const observer = new MutationObserver(hideInnerSelectable);
-    observer.observe(sTable, { attributes: true, attributeFilter: ["selectable"] });
-    
-    return () => observer.disconnect();
-  });
+  // ── bulk delete state ─────────────────────────────────────────────────────
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+  const bulkDeleteModalRef = useRef<HTMLElement>(null);
 
-  // ── prevent scroll-lock layout shift when s-modal opens ───────────────────
-  useEffect(() => {
-    // When s-modal opens it sets body overflow:hidden which removes the
-    // scrollbar and shifts the page left. Compensate by watching for that
-    // change and adding padding-right equal to the scrollbar width.
-    const getScrollbarWidth = () =>
-      window.innerWidth - document.documentElement.clientWidth;
+  // ── bulk action helpers ───────────────────────────────────────────────────
+  const openBulkStatus = () => {
+    setBulkStatus("draft");
+    setBulkStatusError(null);
+    setBulkStatusSaved(false);
+    setTimeout(() => (bulkStatusModalRef.current as any)?.showOverlay?.(), 30);
+  };
 
-    const applyLockFix = () => {
-      const isLocked =
-        document.body.style.overflow === "hidden" ||
-        document.body.style.overflowY === "hidden";
-      if (isLocked) {
-        const sw = getScrollbarWidth();
-        document.body.style.paddingRight = sw > 0 ? `${sw}px` : "";
-        document.documentElement.style.paddingRight = sw > 0 ? `${sw}px` : "";
-      } else {
-        document.body.style.paddingRight = "";
-        document.documentElement.style.paddingRight = "";
-      }
-    };
+  const closeBulkStatus = () => {
+    setBulkStatusError(null);
+    setBulkStatusSaved(false);
+    (bulkStatusModalRef.current as any)?.hideOverlay?.();
+  };
 
-    const bodyObserver = new MutationObserver(applyLockFix);
-    bodyObserver.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["style", "class"],
-    });
+  const handleBulkSaveStatus = async () => {
+    setBulkStatusSaving(true);
+    setBulkStatusError(null);
+    try {
+      await Promise.all(
+        selectedIds.map((id) => api.shopifyProduct.update(id, { status: bulkStatus }))
+      );
+      setBulkStatusSaved(true);
+      setTimeout(() => {
+        closeBulkStatus();
+        setSelectedIds([]);
+      }, 1200);
+    } catch (err: any) {
+      setBulkStatusError(err?.message ?? "Failed to update status for selected products.");
+    } finally {
+      setBulkStatusSaving(false);
+    }
+  };
 
-    return () => bodyObserver.disconnect();
-  }, []);
+  const openBulkDelete = () => {
+    setBulkDeleteError(null);
+    setTimeout(() => (bulkDeleteModalRef.current as any)?.showOverlay?.(), 30);
+  };
+
+  const closeBulkDelete = () => {
+    setBulkDeleteError(null);
+    (bulkDeleteModalRef.current as any)?.hideOverlay?.();
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    setBulkDeleteError(null);
+    try {
+      await Promise.all(
+        selectedIds.map((id) => (api.shopifyProduct as any).delete(id))
+      );
+      closeBulkDelete();
+      setSelectedIds([]);
+    } catch (err: any) {
+      setBulkDeleteError(err?.message ?? "Failed to delete selected products.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   // ── open / close edit helpers ──────────────────────────────────────────────
   const openEdit = (record: any) => {
@@ -300,9 +330,21 @@ export default function Index() {
     setNewTitle("");
     setNewVendor("");
     setNewProductType("");
+    setNewCategory("");
     setNewStatus("draft");
     setNewTags("");
     setNewBody("");
+    setNewPrice("");
+    setNewCompareAtPrice("");
+    setNewChargeTax(true);
+    setNewCostPerItem("");
+    setNewSku("");
+    setNewBarcode("");
+    setNewTrackQuantity(true);
+    setNewQuantity("");
+    setNewPhysicalProduct(true);
+    setNewWeight("");
+    setNewWeightUnit("lb");
     setNewSaveError(null);
     setNewSaved(false);
     setShowAddForm(true);
@@ -313,7 +355,6 @@ export default function Index() {
 
   const closeAddForm = () => {
     setShowAddForm(false);
-    (addModalRef.current as any)?.hideOverlay?.();
   };
 
   // ── save existing ──────────────────────────────────────────────────────────
@@ -402,14 +443,36 @@ export default function Index() {
     setNewSaving(true);
     setNewSaveError(null);
     try {
-      await (api.shopifyProduct as any).create({
+      const productPayload: any = {
         title: newTitle.trim(),
         vendor: newVendor.trim() || undefined,
         productType: newProductType.trim() || undefined,
         status: newStatus,
         tags: newTags.trim() || undefined,
         body: newBody || undefined,
-      });
+        category: newCategory.trim() || undefined,
+      };
+
+      // Construct default variant details if price/inventory/sku is provided
+      if (newPrice || newCompareAtPrice || newSku || newBarcode || newQuantity || newWeight) {
+        productPayload.variants = [
+          {
+            price: newPrice.trim() || "0.00",
+            compareAtPrice: newCompareAtPrice.trim() || undefined,
+            sku: newSku.trim() || undefined,
+            barcode: newBarcode.trim() || undefined,
+            taxable: newChargeTax,
+            cost: newCostPerItem.trim() || undefined,
+            requiresShipping: newPhysicalProduct,
+            weight: newWeight ? parseFloat(newWeight) : undefined,
+            weightUnit: newWeightUnit,
+            inventoryManagement: newTrackQuantity ? "shopify" : "none",
+            inventoryQuantity: newQuantity ? parseInt(newQuantity) : undefined,
+          }
+        ];
+      }
+
+      await (api.shopifyProduct as any).create(productPayload);
       setNewSaved(true);
       setTimeout(() => {
         closeAddForm();
@@ -513,6 +576,429 @@ export default function Index() {
     e.target.value = "";
   };
 
+  if (showAddForm) {
+    return (
+      <div className="shopify-add-product-page">
+        {/* Sticky Header */}
+        <div className="shopify-page-header">
+          <div className="shopify-header-left">
+            <button className="shopify-back-btn" onClick={closeAddForm} title="Back to products">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="18" height="18" fill="currentColor">
+                <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <h1 className="shopify-page-title">Add product</h1>
+          </div>
+          <div className="shopify-header-actions">
+            <button className="shopify-btn-discard" onClick={closeAddForm} disabled={newSaving}>
+              Discard
+            </button>
+            <button className="shopify-btn-save" onClick={handleCreate} disabled={newSaving}>
+              {newSaving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+
+        {/* Form Body Grid */}
+        <div className="shopify-grid">
+          {/* Main Column */}
+          <div>
+            {/* Success Banner */}
+            {newSaved && (
+              <div style={{ marginBottom: "20px" }}>
+                <s-banner tone="success">
+                  <s-text>✅ Product created successfully!</s-text>
+                </s-banner>
+              </div>
+            )}
+
+            {/* Error Banner */}
+            {newSaveError && (
+              <div style={{ marginBottom: "20px" }}>
+                <s-banner tone="critical">
+                  <s-text>{newSaveError}</s-text>
+                </s-banner>
+              </div>
+            )}
+
+            {/* Title & Description Card */}
+            <div className="shopify-card">
+              <div className="shopify-field">
+                <label className="shopify-label">Title</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="Short sleeve t-shirt"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+
+              <div className="shopify-field">
+                <label className="shopify-label" style={{ marginBottom: "8px" }}>Description</label>
+                
+                {/* Formatting toolbar */}
+                <div className="formatting-toolbar">
+                  <div className="toolbar-group">
+                    <select className="toolbar-select toolbar-select-font" title="Font Family" defaultValue="Arial"
+                      onChange={(e) => execNew("fontName", e.target.value)} disabled={newSaving}>
+                      {FONT_FAMILIES.map((f) => (
+                        <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <select className="toolbar-select toolbar-select-size" title="Font Size" defaultValue="14"
+                      onChange={(e) => {
+                        execNew("fontSize", "7");
+                        const el = document.querySelector("font[size='7']") as HTMLElement | null;
+                        if (el) { el.removeAttribute("size"); el.style.fontSize = e.target.value + "px"; }
+                      }} disabled={newSaving}>
+                      {FONT_SIZES.map((s) => <option key={s} value={s}>{s} px</option>)}
+                    </select>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <select className="toolbar-select toolbar-select-heading" title="Paragraph Style" defaultValue="<p>"
+                      onChange={(e) => execNew("formatBlock", e.target.value)} disabled={newSaving}>
+                      {HEADING_OPTIONS.map((o) => <option key={o.val} value={o.val}>{o.label}</option>)}
+                    </select>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <button type="button" className={`toolbar-btn${newBold ? " active" : ""}`} title="Bold" onClick={() => execNew("bold")} disabled={newSaving}><Icon d={ICONS.bold} /></button>
+                    <button type="button" className={`toolbar-btn${newItalic ? " active" : ""}`} title="Italic" onClick={() => execNew("italic")} disabled={newSaving}><Icon d={ICONS.italic} /></button>
+                    <button type="button" className={`toolbar-btn${newUnderline ? " active" : ""}`} title="Underline" onClick={() => execNew("underline")} disabled={newSaving}><Icon d={ICONS.underline} /></button>
+                    <button type="button" className={`toolbar-btn${newStrike ? " active" : ""}`} title="Strikethrough" onClick={() => execNew("strikeThrough")} disabled={newSaving}><Icon d={ICONS.strike} /></button>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <label className="toolbar-color-wrap" title="Text Color">
+                      <span className="toolbar-color-bar" style={{ color: newTextColor }}>A</span>
+                      <span className="toolbar-color-swatch" style={{ background: newTextColor }} />
+                      <input type="color" value={newTextColor} onChange={(e) => { setNewTextColor(e.target.value); execNew("foreColor", e.target.value); }} disabled={newSaving} />
+                    </label>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <button type="button" className="toolbar-btn" title="Align Left" onClick={() => execNew("justifyLeft")} disabled={newSaving}><Icon d={ICONS.alignLeft} /></button>
+                    <button type="button" className="toolbar-btn" title="Align Center" onClick={() => execNew("justifyCenter")} disabled={newSaving}><Icon d={ICONS.alignCenter} /></button>
+                    <button type="button" className="toolbar-btn" title="Align Right" onClick={() => execNew("justifyRight")} disabled={newSaving}><Icon d={ICONS.alignRight} /></button>
+                    <button type="button" className="toolbar-btn" title="Justify" onClick={() => execNew("justifyFull")} disabled={newSaving}><Icon d={ICONS.justify} /></button>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <button type="button" className="toolbar-btn" title="Bullet List" onClick={() => execNew("insertUnorderedList")} disabled={newSaving}><Icon d={ICONS.ul} /></button>
+                    <button type="button" className="toolbar-btn" title="Numbered List" onClick={() => execNew("insertOrderedList")} disabled={newSaving}><Icon d={ICONS.ol} /></button>
+                    <button type="button" className="toolbar-btn" title="Decrease Indent" onClick={() => execNew("outdent")} disabled={newSaving}><Icon d={ICONS.outdent} /></button>
+                    <button type="button" className="toolbar-btn" title="Increase Indent" onClick={() => execNew("indent")} disabled={newSaving}><Icon d={ICONS.indent} /></button>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <button type="button" className="toolbar-btn" title="Blockquote" onClick={() => execNew("formatBlock", "<blockquote>")} disabled={newSaving}><Icon d={ICONS.quote} /></button>
+                    <button type="button" className="toolbar-btn" title="Insert Link"
+                      onClick={() => { const url = prompt("Enter URL (include https://):"); if (url) execNew("createLink", url); }} disabled={newSaving}>
+                      <Icon d={ICONS.link} />
+                    </button>
+                    <label className="toolbar-btn" title="Insert Image" style={{ cursor: "pointer" }}>
+                      <Icon d={ICONS.image} />
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={insertImageToNewEditor} disabled={newSaving} />
+                    </label>
+                  </div>
+
+                  <span className="toolbar-divider" />
+
+                  <div className="toolbar-group">
+                    <button type="button" className="toolbar-btn" title="Clear Formatting" onClick={() => execNew("removeFormat")} disabled={newSaving}>
+                      <Icon d={ICONS.clear} />
+                      <span style={{ fontSize: 11, marginLeft: 2 }}>Clear</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  ref={newEditorRef}
+                  contentEditable
+                  className="visual-editor"
+                  suppressContentEditableWarning
+                  onInput={handleNewEditorInput}
+                  onKeyUp={syncNewFormats}
+                  onMouseUp={syncNewFormats}
+                  data-placeholder="Write your product description here…"
+                  style={{ minHeight: "180px", border: "1px solid #c9cdd3", borderTop: "none" }}
+                />
+              </div>
+            </div>
+
+            {/* Media Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Media</h3>
+              <label className="shopify-media-upload">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="32" height="32" fill="#5c5f62">
+                  <path fillRule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0v-5.5A.75.75 0 0 1 10 3ZM5.75 8a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0v-5.5A.75.75 0 0 1 5.75 8ZM14.25 8a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0v-5.5a.75.75 0 0 1 .75-.75ZM2 10a8 8 0 1 1 16 0 8 8 0 0 1-16 0Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Z" clipRule="evenodd" />
+                </svg>
+                <p className="shopify-media-upload-title">Upload new files</p>
+                <p className="shopify-media-upload-sub">Accepts images, videos, or 3D models</p>
+                <input type="file" accept="image/*" style={{ display: "none" }} disabled={newSaving} />
+              </label>
+            </div>
+
+            {/* Pricing Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Pricing</h3>
+              <div className="shopify-input-group">
+                <div className="shopify-field">
+                  <label className="shopify-label">Price</label>
+                  <input
+                    type="text"
+                    className="shopify-input"
+                    placeholder="Rs 0.00"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    disabled={newSaving}
+                  />
+                </div>
+                <div className="shopify-field">
+                  <label className="shopify-label">Compare at price</label>
+                  <input
+                    type="text"
+                    className="shopify-input"
+                    placeholder="Rs 0.00"
+                    value={newCompareAtPrice}
+                    onChange={(e) => setNewCompareAtPrice(e.target.value)}
+                    disabled={newSaving}
+                  />
+                </div>
+              </div>
+
+              <label className="shopify-checkbox-label">
+                <input
+                  type="checkbox"
+                  className="shopify-checkbox"
+                  checked={newChargeTax}
+                  onChange={(e) => setNewChargeTax(e.target.checked)}
+                  disabled={newSaving}
+                />
+                Charge tax on this product
+              </label>
+
+              <div className="shopify-field" style={{ maxWidth: "50%", marginTop: "16px" }}>
+                <label className="shopify-label">Cost per item</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="Rs 0.00"
+                  value={newCostPerItem}
+                  onChange={(e) => setNewCostPerItem(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+            </div>
+
+            {/* Inventory Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Inventory</h3>
+              
+              <label className="shopify-checkbox-label" style={{ marginBottom: "16px" }}>
+                <input
+                  type="checkbox"
+                  className="shopify-checkbox"
+                  checked={newTrackQuantity}
+                  onChange={(e) => setNewTrackQuantity(e.target.checked)}
+                  disabled={newSaving}
+                />
+                Track quantity
+              </label>
+
+              <div className="shopify-input-group">
+                <div className="shopify-field">
+                  <label className="shopify-label">SKU (Stock Keeping Unit)</label>
+                  <input
+                    type="text"
+                    className="shopify-input"
+                    value={newSku}
+                    onChange={(e) => setNewSku(e.target.value)}
+                    disabled={newSaving}
+                  />
+                </div>
+                <div className="shopify-field">
+                  <label className="shopify-label">Barcode (ISBN, UPC, GTIN, etc.)</label>
+                  <input
+                    type="text"
+                    className="shopify-input"
+                    value={newBarcode}
+                    onChange={(e) => setNewBarcode(e.target.value)}
+                    disabled={newSaving}
+                  />
+                </div>
+              </div>
+
+              {newTrackQuantity && (
+                <div className="shopify-field" style={{ maxWidth: "50%", marginTop: "12px" }}>
+                  <label className="shopify-label">Available quantity</label>
+                  <input
+                    type="number"
+                    className="shopify-input"
+                    placeholder="0"
+                    value={newQuantity}
+                    onChange={(e) => setNewQuantity(e.target.value)}
+                    disabled={newSaving}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Shipping Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Shipping</h3>
+              <label className="shopify-checkbox-label" style={{ marginBottom: "16px" }}>
+                <input
+                  type="checkbox"
+                  className="shopify-checkbox"
+                  checked={newPhysicalProduct}
+                  onChange={(e) => setNewPhysicalProduct(e.target.checked)}
+                  disabled={newSaving}
+                />
+                This is a physical product
+              </label>
+
+              {newPhysicalProduct && (
+                <div className="shopify-input-group" style={{ gridTemplateColumns: "2fr 1fr", marginTop: "12px" }}>
+                  <div className="shopify-field">
+                    <label className="shopify-label">Weight</label>
+                    <input
+                      type="text"
+                      className="shopify-input"
+                      placeholder="0.0"
+                      value={newWeight}
+                      onChange={(e) => setNewWeight(e.target.value)}
+                      disabled={newSaving}
+                    />
+                  </div>
+                  <div className="shopify-field">
+                    <label className="shopify-label">Unit</label>
+                    <select
+                      className="shopify-input"
+                      style={{ padding: "8px 6px" }}
+                      value={newWeightUnit}
+                      onChange={(e) => setNewWeightUnit(e.target.value)}
+                      disabled={newSaving}
+                    >
+                      <option value="lb">lb</option>
+                      <option value="oz">oz</option>
+                      <option value="kg">kg</option>
+                      <option value="g">g</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar Column */}
+          <div>
+            {/* Status Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Product status</h3>
+              <div className="shopify-field" style={{ marginBottom: 0 }}>
+                <select
+                  className="shopify-input"
+                  style={{ padding: "8px 6px", fontWeight: "500" }}
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  disabled={newSaving}
+                >
+                  <option value="active">🟢 Active</option>
+                  <option value="draft">🟡 Draft</option>
+                  <option value="archived">🔴 Archived</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Product Organization Card */}
+            <div className="shopify-card">
+              <h3 className="shopify-card-title">Product organization</h3>
+              
+              <div className="shopify-field">
+                <label className="shopify-label">Category</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="e.g. Apparel"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+
+              <div className="shopify-field">
+                <label className="shopify-label">Product type</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="e.g. T-shirt"
+                  value={newProductType}
+                  onChange={(e) => setNewProductType(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+
+              <div className="shopify-field">
+                <label className="shopify-label">Vendor</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="e.g. Nike"
+                  value={newVendor}
+                  onChange={(e) => setNewVendor(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+
+              <div className="shopify-field" style={{ marginBottom: 0 }}>
+                <label className="shopify-label">Tags</label>
+                <input
+                  type="text"
+                  className="shopify-input"
+                  placeholder="Comma-separated: Summer, Sale, New"
+                  value={newTags}
+                  onChange={(e) => setNewTags(e.target.value)}
+                  disabled={newSaving}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer actions bar */}
+        <div className="shopify-footer-bar">
+          <button className="shopify-btn-discard" onClick={closeAddForm} disabled={newSaving}>
+            Discard
+          </button>
+          <button className="shopify-btn-save" onClick={handleCreate} disabled={newSaving}>
+            {newSaving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <s-page heading="Products">
       {/* ════════════════════════════════════════════════════════════════
@@ -539,11 +1025,106 @@ export default function Index() {
           PRODUCTS TABLE
       ════════════════════════════════════════════════════════════════ */}
       <s-section>
-        <div ref={autoTableWrapperRef}>
+        {selectedIds.length > 0 && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 20px",
+            background: "#f1f5f9",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "600", color: "#334155" }}>
+                {selectedIds.length} {selectedIds.length === 1 ? "product" : "products"} selected
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedIds([]);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#2563eb",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                }}
+              >
+                Clear selection
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                id="bulk-status-btn"
+                onClick={openBulkStatus}
+                style={{
+                  padding: "6px 12px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                Change Status
+              </button>
+              <button
+                id="bulk-delete-btn"
+                onClick={openBulkDelete}
+                style={{
+                  padding: "6px 12px",
+                  background: "#bf0711",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+              >
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div>
           <AutoTable
             //@ts-ignore
             model={api.shopifyProduct}
+            selectable={false}
             columns={[
+              {
+                header: "Select",
+                render: ({ record }: { record: any }) => (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(record.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds((prev) => [...prev, record.id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((id) => id !== record.id));
+                        }
+                      }}
+                      style={{
+                        cursor: "pointer",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "4px",
+                        accentColor: "#008060",
+                      }}
+                    />
+                  </div>
+                ),
+              },
               "title",
               "status",
               "vendor",
@@ -599,214 +1180,7 @@ export default function Index() {
         </div>
       </s-section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          ADD PRODUCT MODAL
-      ════════════════════════════════════════════════════════════════════ */}
-      <s-modal
-        ref={addModalRef as any}
-        id="add-product-modal"
-        heading="Add New Product"
-        onHide={closeAddForm}
-      >
-        <s-box padding="large">
-          <s-stack gap="large">
 
-            {/* Success banner */}
-            {newSaved && (
-              <s-banner tone="success">
-                <s-text>✅ Product created successfully!</s-text>
-              </s-banner>
-            )}
-
-            {/* Error banner */}
-            {newSaveError && (
-              <s-banner tone="critical">
-                <s-text>{newSaveError}</s-text>
-              </s-banner>
-            )}
-
-            {/* Title */}
-            <s-text-field
-              label="Product Title *"
-              value={newTitle}
-              onChange={(e: any) => setNewTitle(e.target.value)}
-              placeholder="e.g. Wireless Headphones Pro"
-              id="new-product-title"
-            />
-
-            {/* Two-column row: Vendor + Product Type */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <s-text-field
-                label="Vendor"
-                value={newVendor}
-                onChange={(e: any) => setNewVendor(e.target.value)}
-                placeholder="e.g. Apple"
-                id="new-product-vendor"
-              />
-              <s-text-field
-                label="Product Type"
-                value={newProductType}
-                onChange={(e: any) => setNewProductType(e.target.value)}
-                placeholder="e.g. Electronics"
-                id="new-product-type"
-              />
-            </div>
-
-            {/* Tags */}
-            <s-text-field
-              label="Tags"
-              value={newTags}
-              onChange={(e: any) => setNewTags(e.target.value)}
-              placeholder="Comma-separated: sale, new-arrival, featured"
-              id="new-product-tags"
-            />
-
-            {/* Status */}
-            <s-select
-              label="Status"
-              value={newStatus}
-              onChange={(e: any) => setNewStatus(e.target.value)}
-              id="new-product-status"
-            >
-              <s-option value="active">🟢 Active</s-option>
-              <s-option value="draft">🟡 Draft</s-option>
-              <s-option value="archived">🔴 Archived</s-option>
-            </s-select>
-
-            {/* Description label */}
-            <div>
-              <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#6d7175" }}>Description</p>
-
-              {/* Rich text toolbar */}
-              <div className="formatting-toolbar">
-                <div className="toolbar-group">
-                  <select className="toolbar-select toolbar-select-font" title="Font Family" defaultValue="Arial"
-                    onChange={(e) => execNew("fontName", e.target.value)}>
-                    {FONT_FAMILIES.map((f) => (
-                      <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <select className="toolbar-select toolbar-select-size" title="Font Size" defaultValue="14"
-                    onChange={(e) => {
-                      execNew("fontSize", "7");
-                      const el = document.querySelector("font[size='7']") as HTMLElement | null;
-                      if (el) { el.removeAttribute("size"); el.style.fontSize = e.target.value + "px"; }
-                    }}>
-                    {FONT_SIZES.map((s) => <option key={s} value={s}>{s} px</option>)}
-                  </select>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <select className="toolbar-select toolbar-select-heading" title="Paragraph Style" defaultValue="<p>"
-                    onChange={(e) => execNew("formatBlock", e.target.value)}>
-                    {HEADING_OPTIONS.map((o) => <option key={o.val} value={o.val}>{o.label}</option>)}
-                  </select>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <button type="button" className={`toolbar-btn${newBold ? " active" : ""}`} title="Bold" onClick={() => execNew("bold")}><Icon d={ICONS.bold} /></button>
-                  <button type="button" className={`toolbar-btn${newItalic ? " active" : ""}`} title="Italic" onClick={() => execNew("italic")}><Icon d={ICONS.italic} /></button>
-                  <button type="button" className={`toolbar-btn${newUnderline ? " active" : ""}`} title="Underline" onClick={() => execNew("underline")}><Icon d={ICONS.underline} /></button>
-                  <button type="button" className={`toolbar-btn${newStrike ? " active" : ""}`} title="Strikethrough" onClick={() => execNew("strikeThrough")}><Icon d={ICONS.strike} /></button>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <label className="toolbar-color-wrap" title="Text Color">
-                    <span className="toolbar-color-bar" style={{ color: newTextColor }}>A</span>
-                    <span className="toolbar-color-swatch" style={{ background: newTextColor }} />
-                    <input type="color" value={newTextColor} onChange={(e) => { setNewTextColor(e.target.value); execNew("foreColor", e.target.value); }} />
-                  </label>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <button type="button" className="toolbar-btn" title="Align Left" onClick={() => execNew("justifyLeft")}><Icon d={ICONS.alignLeft} /></button>
-                  <button type="button" className="toolbar-btn" title="Align Center" onClick={() => execNew("justifyCenter")}><Icon d={ICONS.alignCenter} /></button>
-                  <button type="button" className="toolbar-btn" title="Align Right" onClick={() => execNew("justifyRight")}><Icon d={ICONS.alignRight} /></button>
-                  <button type="button" className="toolbar-btn" title="Justify" onClick={() => execNew("justifyFull")}><Icon d={ICONS.justify} /></button>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <button type="button" className="toolbar-btn" title="Bullet List" onClick={() => execNew("insertUnorderedList")}><Icon d={ICONS.ul} /></button>
-                  <button type="button" className="toolbar-btn" title="Numbered List" onClick={() => execNew("insertOrderedList")}><Icon d={ICONS.ol} /></button>
-                  <button type="button" className="toolbar-btn" title="Decrease Indent" onClick={() => execNew("outdent")}><Icon d={ICONS.outdent} /></button>
-                  <button type="button" className="toolbar-btn" title="Increase Indent" onClick={() => execNew("indent")}><Icon d={ICONS.indent} /></button>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <button type="button" className="toolbar-btn" title="Blockquote" onClick={() => execNew("formatBlock", "<blockquote>")}><Icon d={ICONS.quote} /></button>
-                  <button type="button" className="toolbar-btn" title="Insert Link"
-                    onClick={() => { const url = prompt("Enter URL (include https://:"); if (url) execNew("createLink", url); }}>
-                    <Icon d={ICONS.link} />
-                  </button>
-                  <label className="toolbar-btn" title="Insert Image" style={{ cursor: "pointer" }}>
-                    <Icon d={ICONS.image} />
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={insertImageToNewEditor} />
-                  </label>
-                </div>
-
-                <span className="toolbar-divider" />
-
-                <div className="toolbar-group">
-                  <button type="button" className="toolbar-btn" title="Clear Formatting" onClick={() => execNew("removeFormat")}>
-                    <Icon d={ICONS.clear} />
-                    <span style={{ fontSize: 11, marginLeft: 2 }}>Clear</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Rich text editor area */}
-              <div
-                ref={newEditorRef}
-                contentEditable
-                className="visual-editor"
-                suppressContentEditableWarning
-                onInput={handleNewEditorInput}
-                onKeyUp={syncNewFormats}
-                onMouseUp={syncNewFormats}
-                data-placeholder="Write your product description here…"
-                id="new-product-description"
-              />
-            </div>
-
-          </s-stack>
-        </s-box>
-
-        {/* Primary action */}
-        <div slot="primaryAction">
-          <s-button
-            id="create-product-submit-btn"
-            variant="primary"
-            loading={newSaving}
-            onClick={handleCreate}
-          >
-            {newSaved ? "✅ Created!" : "Create Product"}
-          </s-button>
-        </div>
-
-        {/* Secondary action */}
-        <div slot="secondaryActions">
-          <s-button id="cancel-add-product-btn" onClick={closeAddForm}>
-            Cancel
-          </s-button>
-        </div>
-      </s-modal>
 
       {/* ── Edit Modal ──────────────────────────────────────────────────── */}
       <s-modal
@@ -1107,6 +1481,86 @@ export default function Index() {
         </div>
         <div slot="secondaryActions">
           <s-button id="cancel-delete-btn" onClick={closeDeleteConfirm}>Cancel</s-button>
+        </div>
+      </s-modal>
+
+      {/* ── Bulk Edit Status Modal ───────────────────────────────────────────── */}
+      <s-modal
+        ref={bulkStatusModalRef as any}
+        id="bulk-status-modal"
+        heading={`Edit Status for ${selectedIds.length} Products`}
+        onHide={closeBulkStatus}
+      >
+        <s-box padding="large">
+          <s-stack gap="large">
+            {bulkStatusSaved && (
+              <s-banner tone="success">
+                <s-text>✅ Status updated successfully for all selected products!</s-text>
+              </s-banner>
+            )}
+            {bulkStatusError && (
+              <s-banner tone="critical">
+                <s-text>{bulkStatusError}</s-text>
+              </s-banner>
+            )}
+            <s-select
+              label="New Status"
+              value={bulkStatus}
+              onChange={(e: any) => setBulkStatus(e.target.value)}
+              id="bulk-status-select"
+            >
+              <s-option value="active">🟢 Active</s-option>
+              <s-option value="draft">🟡 Draft</s-option>
+              <s-option value="archived">🔴 Archived</s-option>
+            </s-select>
+          </s-stack>
+        </s-box>
+        <div slot="primaryAction">
+          <s-button
+            id="bulk-save-status-btn"
+            variant="primary"
+            loading={bulkStatusSaving}
+            onClick={handleBulkSaveStatus}
+          >
+            {bulkStatusSaved ? "✅ Saved!" : "Save Status"}
+          </s-button>
+        </div>
+        <div slot="secondaryActions">
+          <s-button id="bulk-cancel-status-btn" onClick={closeBulkStatus}>Cancel</s-button>
+        </div>
+      </s-modal>
+
+      {/* ── Bulk Delete Confirm Modal ────────────────────────────────────────── */}
+      <s-modal
+        ref={bulkDeleteModalRef as any}
+        id="bulk-delete-confirm-modal"
+        heading="Delete Products"
+        onHide={closeBulkDelete}
+      >
+        <s-box padding="large">
+          <s-stack gap="base">
+            {bulkDeleteError && (
+              <s-banner tone="critical">
+                <s-text>{bulkDeleteError}</s-text>
+              </s-banner>
+            )}
+            <s-text>
+              Are you sure you want to delete <strong>{selectedIds.length}</strong> selected products? This action cannot be undone.
+            </s-text>
+          </s-stack>
+        </s-box>
+        <div slot="primaryAction">
+          <s-button
+            id="bulk-confirm-delete-btn"
+            tone="critical"
+            loading={bulkDeleting}
+            onClick={handleBulkDelete}
+          >
+            Delete Products
+          </s-button>
+        </div>
+        <div slot="secondaryActions">
+          <s-button id="bulk-cancel-delete-btn" onClick={closeBulkDelete}>Cancel</s-button>
         </div>
       </s-modal>
     </s-page>

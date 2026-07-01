@@ -1,11 +1,10 @@
 /** put your app's css here */
 
-/* Prevent layout shift when modals open/close (scrollbar gutter always reserved) */
-html {
-  scrollbar-gutter: stable both-edges;
-  overflow-y: scroll; /* fallback: always show scrollbar so removing it has no layout effect */
+html, body {
+  overflow-x: hidden !important;
+  padding-right: 0px !important;
+  margin-right: 0px !important;
 }
-
 
 /* ─── Add Product Bar ───────────────────────────────────────────────── */
 .add-product-bar {
@@ -373,4 +372,235 @@ html {
 .action-icon-btn--delete:focus-visible {
   box-shadow: 0 0 0 3px rgba(191, 7, 17, 0.25);
 }
+
+/* ─── Shopify Add Product Page Styles ─────────────────────────────────── */
+.shopify-add-product-page {
+  background-color: #f6f6f7;
+  min-height: 100vh;
+  padding-bottom: 80px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Header bar */
+.shopify-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e3e5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.shopify-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shopify-back-btn {
+  background: none;
+  border: 1px solid #e1e3e5;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #5c5f62;
+  transition: background 0.15s, color 0.15s;
+}
+
+.shopify-back-btn:hover {
+  background-color: #f1f2f4;
+  color: #202223;
+}
+
+.shopify-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #202223;
+  margin: 0;
+}
+
+.shopify-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.shopify-btn-discard {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #202223;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.shopify-btn-discard:hover {
+  background-color: #f1f2f4;
+}
+
+.shopify-btn-save {
+  background-color: #008060;
+  border: 1px solid transparent;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 128, 96, 0.20);
+  transition: background 0.15s;
+}
+
+.shopify-btn-save:hover {
+  background-color: #006e52;
+}
+
+/* Two-column layout */
+.shopify-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 20px auto 0;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .shopify-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* White card styling */
+.shopify-card {
+  background-color: #ffffff;
+  border: 1px solid #e1e3e5;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.shopify-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #202223;
+  margin: 0 0 16px;
+}
+
+/* Text fields & inputs */
+.shopify-field {
+  margin-bottom: 16px;
+}
+
+.shopify-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #202223;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.shopify-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #c9cdd3;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #202223;
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.shopify-input:focus {
+  border-color: #008060;
+  box-shadow: 0 0 0 1px #008060, inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.shopify-input-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Checkbox container */
+.shopify-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #202223;
+  cursor: pointer;
+  user-select: none;
+  margin: 12px 0;
+}
+
+.shopify-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #008060;
+}
+
+/* Media Dropzone */
+.shopify-media-upload {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  background-color: #fafbfb;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.shopify-media-upload:hover {
+  background-color: #f1f2f4;
+  border-color: #008060;
+}
+
+.shopify-media-upload-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #202223;
+  margin: 0;
+}
+
+.shopify-media-upload-sub {
+  font-size: 12px;
+  color: #5c5f62;
+  margin: 0;
+}
+
+/* Bottom Bar */
+.shopify-footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top: 1px solid #e1e3e5;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
 
