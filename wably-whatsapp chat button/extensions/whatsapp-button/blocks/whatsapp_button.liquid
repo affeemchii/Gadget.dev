@@ -390,7 +390,7 @@
 
   (function() {
     var button = document.getElementById('whatsapp-btn-{{ block.id }}');
-    var apiUrl = "https://whatsapp-chat-button--development.gadget.app/whatsapp-settings?shop=" + encodeURIComponent("{{ shop.permanent_domain }}");
+    var apiUrl = "https://wably.gadget.app/whatsapp-settings?shop=" + encodeURIComponent("{{ shop.permanent_domain }}");
     
     fetch(apiUrl)
       .then(function(response) { return response.json(); })
