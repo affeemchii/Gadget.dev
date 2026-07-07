@@ -12,3 +12,4 @@ shopify.app.*.toml
 .shopify/tsconfig.web.tsbuildinfo
 tsconfig.web.tsbuildinfo
 node_modules/
+node_modules/
