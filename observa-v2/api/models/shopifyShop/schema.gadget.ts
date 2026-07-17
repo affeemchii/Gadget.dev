@@ -7,6 +7,11 @@ export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
   storageKey: "DataModel-Shopify-Shop",
   fields: {
+    alertRule: {
+      type: "hasOne",
+      child: { model: "alertRule", belongsToField: "shop" },
+      storageKey: "GB5B0045iTTp",
+    },
     alertSettings: {
       type: "hasOne",
       child: { model: "alertSettings", belongsToField: "shop" },

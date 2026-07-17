@@ -53,7 +53,6 @@ export const permissions: GadgetPermissions = {
       },
       actions: {
         getAnalytics: true,
-        sendAlert: true,
       },
     },
     unauthenticated: {
