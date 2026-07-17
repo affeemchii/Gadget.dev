@@ -1,0 +1,15 @@
+.gadget/
+node_modules/
+**/.DS_Store
+.react-router/
+
+# Shopify
+extensions/**/dist
+extensions/**/node_modules
+extensions/**/generated
+.env.*
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md
+
+samples/*

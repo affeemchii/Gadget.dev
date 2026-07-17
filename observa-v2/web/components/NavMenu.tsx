@@ -1,0 +1,16 @@
+import { Link } from "react-router";
+import { NavMenu as AppBridgeNavMenu } from "@shopify/app-bridge-react";
+
+export function NavMenu() {
+  return (
+    <AppBridgeNavMenu>
+      <Link to="/" rel="home">
+        Home
+      </Link>
+      <Link to="/settings">
+        Settings
+      </Link>
+      <Link to="/plans">Plans</Link>
+    </AppBridgeNavMenu>
+  );
+}
