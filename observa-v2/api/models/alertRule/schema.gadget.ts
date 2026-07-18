@@ -9,8 +9,7 @@ export const schema: GadgetModel = {
   fields: {
     condition: {
       type: "enum",
-      default: [],
-      acceptMultipleSelections: true,
+      acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
       options: [
         "drops_by_percent",
@@ -29,8 +28,7 @@ export const schema: GadgetModel = {
     },
     metric: {
       type: "enum",
-      default: [],
-      acceptMultipleSelections: true,
+      acceptMultipleSelections: false,
       acceptUnlistedOptions: false,
       options: [
         "revenue",
@@ -45,6 +43,7 @@ export const schema: GadgetModel = {
     name: { type: "string", storageKey: "MrvGTK8mvOG0" },
     notifyEmail: { type: "boolean", storageKey: "Dp4LqHiTSayl" },
     notifySlack: { type: "boolean", storageKey: "rl3rBeC8pahF" },
+    notifyWhatsapp: { type: "boolean", storageKey: "CzF_AXM7SnL0" },
     shop: {
       type: "belongsTo",
       parent: { model: "shopifyShop" },

@@ -1,19 +1,19 @@
 # Learn more about working with Shopify TOML files with Gadget at https://docs.gadget.dev/guides/plugins/shopify/advanced-topics/shopify-app-toml
 
-client_id = "1b1518eb888b4bb47201f3f718c44ca7"
-name = "whatsapp-chat-button"
-application_url = "https://whatsapp-chat-button.gadget.app/api/shopify/install-or-render"
+client_id = "a175c2d9657555d68196c7d75a580361"
+name = "wably - whatsApp chat button"
+application_url = "https://wably.gadget.app/api/shopify/install-or-render"
 embedded = true
 
 [auth]
-redirect_urls = [ "https://whatsapp-chat-button.gadget.app/api/connections/auth/shopify/callback" ]
+redirect_urls = [ "https://wably.gadget.app/api/connections/auth/shopify/callback" ]
 
 [webhooks]
 api_version = "2026-04"
 
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-uri = "https://webhooks.gadget-services.net/shopify/v1?domain=whatsapp-chat-button.gadget.app"
+uri = "https://webhooks.gadget-services.net/shopify/v1?domain=wably.gadget.app"
 topics = [ "shop/update", "app/uninstalled" ]
 
 [access_scopes]

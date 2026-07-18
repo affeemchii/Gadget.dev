@@ -412,7 +412,7 @@
   dependencies:
     fastify-plugin "^4.0.0"
 
-"@gadget-client/whatsapp-chat-button@link:.gadget/client":
+"@gadget-client/wably@link:.gadget/client":
   version "0.0.0"
   uid ""
 

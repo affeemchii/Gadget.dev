@@ -14,23 +14,37 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
 export default function() {
   const { isAuthenticated, loading } = useGadget();
-  const [{ data: shopData, fetching }] = useFindFirst(api.shopifyShop, { select: { mantleApiToken: true, id: true } });
 
-  // Wait for both authentication AND shop data to load before rendering
-  if (loading || fetching) {
+  if (loading) {
     return <FullPageSpinner />;
   }
 
-  // Only render MantleProvider when authenticated so env vars and shop data are available
-  return isAuthenticated ? (
-    <MantleProvider appId={process.env.GADGET_PUBLIC_MANTLE_APP_ID as string} customerApiToken={(shopData as any)?.mantleApiToken}>
+  if (!isAuthenticated) {
+    return <Unauthenticated />;
+  }
+
+  return <AuthenticatedAppLayout />;
+}
+
+const AuthenticatedAppLayout = () => {
+  const [{ data: shopData, fetching }] = useFindFirst(api.shopifyShop, {
+    select: { mantleApiToken: true, id: true },
+  });
+
+  if (fetching) {
+    return <FullPageSpinner />;
+  }
+
+  return (
+    <MantleProvider
+      appId={process.env.GADGET_PUBLIC_MANTLE_APP_ID as string}
+      customerApiToken={shopData?.mantleApiToken ?? ""}
+    >
       <>
         <NavMenu />
         <Outlet />
       </>
     </MantleProvider>
-  ) : (
-    <Unauthenticated />
   );
 }
 

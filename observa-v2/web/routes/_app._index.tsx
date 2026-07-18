@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useGlobalAction, useFindFirst } from "@gadgetinc/react";
+import { useGadget } from "@gadgetinc/react-shopify-app-bridge";
 import { useNavigate } from "react-router";
 import { api } from "../api";
 import {
@@ -76,11 +77,16 @@ interface OrderDataPoint {
 }
 
 export default function Dashboard() {
+  const { isAuthenticated, loading: authLoading } = useGadget();
   const [dateRange, setDateRange] = useState<'today' | 'last_7_days' | 'last_30_days'>('today');
   const [dateRangeValue, setDateRangeValue] = useState<{ start?: Date; end?: Date }>({});
   const [comparison, setComparison] = useState<'none' | 'previous_period' | 'benchmarks'>('previous_period');
   const [{ data, fetching, error }, refresh] = useGlobalAction(api.getAnalytics);
-  const [{ data: shopData, fetching: fetchingShop }] = useFindFirst(api.shopifyShop, { select: { currency: true, id: true } });
+  const shouldLoadShop = isAuthenticated && !authLoading;
+  const [{ data: shopData, fetching: fetchingShop }] = useFindFirst(api.shopifyShop, {
+    pause: !shouldLoadShop,
+    select: { currency: true, id: true },
+  });
   const [dailyPage, setDailyPage] = useState(1);
   const [ordersPage, setOrdersPage] = useState(1);
   const itemsPerPage = 10;
@@ -309,8 +315,8 @@ export default function Dashboard() {
     };
   }, [analyticsData]);
 
-  // Loading state - show loading while fetching shop data OR analytics
-  if ((fetchingShop && !shopData) || (fetching && !data)) {
+  // Loading state - show loading while auth, shop data, or analytics are still pending
+  if (authLoading || (shouldLoadShop && fetchingShop && !shopData) || (fetching && !data)) {
     return (
       <Page title="Performance Analytics" fullWidth>
         <div
