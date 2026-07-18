@@ -5,6 +5,7 @@ name = "observa-development"
 application_url = "https://observa--development.gadget.app/api/shopify/install-or-render"
 embedded = true
 
+handle = "observa-development-2"
 [auth]
 redirect_urls = [ "https://observa--development.gadget.app/api/connections/auth/shopify/callback" ]
 
@@ -13,7 +14,8 @@ api_version = "2026-04"
 
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-uri = "https://observa--development.gadget.app/api/webhooks/shopify"
+uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa--development.gadget.app"
+topics = [ "shop/update", "app/uninstalled" ]
 
 [access_scopes]
 scopes = "read_checkouts, read_customers, read_orders, read_analytics, read_products, read_fulfillments, read_merchant_managed_fulfillment_orders, read_reports"

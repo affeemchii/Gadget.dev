@@ -5,12 +5,17 @@ name = "Observa"
 application_url = "https://observa.gadget.app/api/shopify/install-or-render"
 embedded = true
 
+handle = "observa"
 [auth]
-redirect_urls = ["https://observa.gadget.app/api/connections/auth/shopify/callback"]
+redirect_urls = [ "https://observa.gadget.app/api/connections/auth/shopify/callback" ]
 
 [webhooks]
-api_version = "2025-10"
+api_version = "2026-04"
 
 [[webhooks.subscriptions]]
-compliance_topics = [ "customers/data_request", "customers/redact" ,"shop/redact"]
-uri = "https://observa.gadget.app/api/webhooks/shopify"
+compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
+topics = [ "shop/update", "app/uninstalled" ]
+
+[access_scopes]
+scopes = "read_checkouts, read_customers, read_orders, read_analytics, read_products, read_fulfillments, read_merchant_managed_fulfillment_orders, read_reports"

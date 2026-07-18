@@ -4,7 +4,7 @@ import type { GadgetModel } from "gadget-server";
 // For more information on how to update this file http://docs.gadget.dev
 
 export const schema: GadgetModel = {
-  type: "gadget/model-schema/v1",
+  type: "gadget/model-schema/v2",
   storageKey: "2baAa4AoyWY1",
   fields: {
     condition: {
@@ -18,13 +18,27 @@ export const schema: GadgetModel = {
         "above_threshold",
       ],
       storageKey: "mqt48V6CMCpS",
+      filterIndex: false,
+      searchIndex: false,
     },
-    cooldown: { type: "number", storageKey: "Xgua04EnPtx-" },
-    isActive: { type: "boolean", storageKey: "-ArL8PLaVRoP" },
+    cooldown: {
+      type: "number",
+      storageKey: "Xgua04EnPtx-",
+      filterIndex: false,
+      searchIndex: false,
+    },
+    isActive: {
+      type: "boolean",
+      storageKey: "-ArL8PLaVRoP",
+      filterIndex: false,
+      searchIndex: false,
+    },
     lastTriggeredAt: {
       type: "dateTime",
       includeTime: true,
       storageKey: "KwyQl8LAvLRi",
+      filterIndex: false,
+      searchIndex: false,
     },
     metric: {
       type: "enum",
@@ -39,17 +53,51 @@ export const schema: GadgetModel = {
         "payment",
       ],
       storageKey: "BKsUb6H_5ugK",
+      filterIndex: false,
+      searchIndex: false,
     },
-    name: { type: "string", storageKey: "MrvGTK8mvOG0" },
-    notifyEmail: { type: "boolean", storageKey: "Dp4LqHiTSayl" },
-    notifySlack: { type: "boolean", storageKey: "rl3rBeC8pahF" },
-    notifyWhatsapp: { type: "boolean", storageKey: "CzF_AXM7SnL0" },
+    name: {
+      type: "string",
+      storageKey: "MrvGTK8mvOG0",
+      filterIndex: false,
+      searchIndex: false,
+    },
+    notifyEmail: {
+      type: "boolean",
+      storageKey: "Dp4LqHiTSayl",
+      filterIndex: false,
+      searchIndex: false,
+    },
+    notifySlack: {
+      type: "boolean",
+      storageKey: "rl3rBeC8pahF",
+      filterIndex: false,
+      searchIndex: false,
+    },
+    notifyWhatsapp: {
+      type: "boolean",
+      storageKey: "CzF_AXM7SnL0",
+      filterIndex: false,
+      searchIndex: false,
+    },
     shop: {
       type: "belongsTo",
       parent: { model: "shopifyShop" },
       storageKey: "zlrupMtedd13",
+      searchIndex: false,
     },
-    threshold: { type: "number", storageKey: "wu_6SA52joVY" },
-    timeWindow: { type: "number", storageKey: "aqHwJKdi8g8r" },
+    threshold: {
+      type: "number",
+      storageKey: "wu_6SA52joVY",
+      filterIndex: false,
+      searchIndex: false,
+    },
+    timeWindow: {
+      type: "number",
+      storageKey: "aqHwJKdi8g8r",
+      filterIndex: false,
+      searchIndex: false,
+    },
   },
+  searchIndex: false,
 };
