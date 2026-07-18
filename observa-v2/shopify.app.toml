@@ -1,11 +1,10 @@
 # Learn more about working with Shopify TOML files with Gadget at https://docs.gadget.dev/guides/plugins/shopify/advanced-topics/shopify-app-toml
-
 client_id = "30eb04ccb90771617547fd6f6ea5e70d"
 name = "Observa"
 application_url = "https://observa.gadget.app/api/shopify/install-or-render"
 embedded = true
-
 handle = "observa"
+
 [auth]
 redirect_urls = [ "https://observa.gadget.app/api/connections/auth/shopify/callback" ]
 
@@ -15,7 +14,10 @@ api_version = "2026-04"
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
-topics = [ "shop/update", "app/uninstalled" ]
+
+[[webhooks.subscriptions]]
+topics = [ "shop/update", "app/uninstalled", "orders/create", "orders/updated", "checkouts/create", "inventory_levels/update" ]
+uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
 
 [access_scopes]
-scopes = "read_checkouts, read_customers, read_orders, read_analytics, read_products, read_fulfillments, read_merchant_managed_fulfillment_orders, read_reports"
+scopes = "read_checkouts, read_customers, read_orders, read_analytics, read_products, read_fulfillments, read_merchant_managed_fulfillment_orders, read_reports, read_inventory"
