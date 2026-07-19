@@ -12,9 +12,26 @@ export const permissions: GadgetPermissions = {
     "shopify-app-users": {
       storageKey: "Role-Shopify-App",
       models: {
+        alertEvent: {
+          read: true,
+        },
+        alertRule: {
+          read: true,
+          actions: {
+            create: true,
+            update: true,
+          },
+        },
         alertSettings: {
           read: true,
           actions: {
+            update: true,
+          },
+        },
+        notificationChannel: {
+          read: true,
+          actions: {
+            create: true,
             update: true,
           },
         },

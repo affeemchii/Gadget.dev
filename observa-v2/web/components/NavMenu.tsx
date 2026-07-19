@@ -5,12 +5,23 @@ export function NavMenu() {
   return (
     <AppBridgeNavMenu>
       <Link to="/" rel="home">
-        Home
+        Dashboard
+      </Link>
+      <Link to="/alerts">
+        Alerts
+      </Link>
+      <Link to="/analytics">
+        Analytics
+      </Link>
+      <Link to="/reports">
+        Reports
       </Link>
       <Link to="/settings">
         Settings
       </Link>
-      <Link to="/plans">Plans</Link>
+      <Link to="/billing">
+        Billing
+      </Link>
     </AppBridgeNavMenu>
   );
 }

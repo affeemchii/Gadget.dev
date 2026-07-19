@@ -18,7 +18,6 @@ export const schema: GadgetModel = {
         "above_threshold",
       ],
       storageKey: "mqt48V6CMCpS",
-      filterIndex: false,
       searchIndex: false,
     },
     cooldown: {
@@ -30,7 +29,6 @@ export const schema: GadgetModel = {
     isActive: {
       type: "boolean",
       storageKey: "-ArL8PLaVRoP",
-      filterIndex: false,
       searchIndex: false,
     },
     lastTriggeredAt: {
@@ -53,13 +51,11 @@ export const schema: GadgetModel = {
         "payment",
       ],
       storageKey: "BKsUb6H_5ugK",
-      filterIndex: false,
       searchIndex: false,
     },
     name: {
       type: "string",
       storageKey: "MrvGTK8mvOG0",
-      filterIndex: false,
       searchIndex: false,
     },
     notifyEmail: {
