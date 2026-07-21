@@ -37,7 +37,7 @@ export const params = {
 export const options = {
   triggers: {
     shopify: {
-      triggerKey: "andleInventoryUpdate",
+      triggerKey: "handleInventoryUpdate",
     },
   },
 }

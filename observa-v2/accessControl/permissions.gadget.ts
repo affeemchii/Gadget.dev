@@ -14,11 +14,15 @@ export const permissions: GadgetPermissions = {
       models: {
         alertEvent: {
           read: true,
+          actions: {
+            update: true,
+          },
         },
         alertRule: {
           read: true,
           actions: {
             create: true,
+            delete: true,
             update: true,
           },
         },

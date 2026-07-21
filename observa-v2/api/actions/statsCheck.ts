@@ -83,8 +83,6 @@ export const run: ActionRun = async ({ params, logger, api }) => {
 
 export const options = {
   triggers: {
-    scheduler: [
-      { cron: "*/5 * * * *" },
-    ],
+    scheduler: [{ cron: "*/5 * * * *" }],
   },
 };

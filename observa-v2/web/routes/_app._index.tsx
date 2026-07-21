@@ -15,7 +15,6 @@ import {
 import { api } from "../api";
 
 export default function Dashboard() {
-  // Fetch recent alert events
   const [{ data: events, fetching: fetchingEvents }] = useFindMany(
     api.alertEvent,
     {
@@ -33,7 +32,6 @@ export default function Dashboard() {
     }
   );
 
-  // Fetch analytics for overview cards
   const [{ data: analyticsData, fetching: fetchingAnalytics }, runAnalytics] =
     useGlobalAction(api.getAnalytics);
 
@@ -47,9 +45,7 @@ export default function Dashboard() {
   const conversionRate = analytics?.data?.metrics?.conversionRate ?? "0.00";
   const avgOrderValue = analytics?.data?.metrics?.avgOrderValue ?? "0.00";
 
-  // Store health: based on recent unresolved alerts
-  const unresolvedCount =
-    events?.filter((e) => !e.resolved).length ?? 0;
+  const unresolvedCount = events?.filter((e) => !e.resolved).length ?? 0;
   const storeHealth =
     unresolvedCount === 0
       ? { label: "Healthy", tone: "success" as const }
@@ -77,21 +73,13 @@ export default function Dashboard() {
   return (
     <Page title="Dashboard">
       <BlockStack gap="600">
-        {/* Overview Cards */}
         <InlineGrid columns={5} gap="400">
           <Card>
             <BlockStack gap="200">
-              <Text variant="bodySm" as="p" tone="subdued">
-                Revenue Today
-              </Text>
-              {fetchingAnalytics ? (
-                <Spinner size="small" />
-              ) : (
+              <Text variant="bodySm" as="p" tone="subdued">Revenue Today</Text>
+              {fetchingAnalytics ? <Spinner size="small" /> : (
                 <Text variant="heading2xl" as="p">
-                  ${Number(revenue).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  ${Number(revenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
               )}
             </BlockStack>
@@ -99,80 +87,69 @@ export default function Dashboard() {
 
           <Card>
             <BlockStack gap="200">
-              <Text variant="bodySm" as="p" tone="subdued">
-                Orders Today
-              </Text>
-              {fetchingAnalytics ? (
-                <Spinner size="small" />
-              ) : (
-                <Text variant="heading2xl" as="p">
-                  {orders}
-                </Text>
+              <Text variant="bodySm" as="p" tone="subdued">Orders Today</Text>
+              {fetchingAnalytics ? <Spinner size="small" /> : (
+                <Text variant="heading2xl" as="p">{orders}</Text>
               )}
             </BlockStack>
           </Card>
 
           <Card>
             <BlockStack gap="200">
-              <Text variant="bodySm" as="p" tone="subdued">
-                Conversion Rate
-              </Text>
-              {fetchingAnalytics ? (
-                <Spinner size="small" />
-              ) : (
-                <Text variant="heading2xl" as="p">
-                  {conversionRate}%
-                </Text>
+              <Text variant="bodySm" as="p" tone="subdued">Conversion Rate</Text>
+              {fetchingAnalytics ? <Spinner size="small" /> : (
+                <Text variant="heading2xl" as="p">{conversionRate}%</Text>
               )}
             </BlockStack>
           </Card>
 
           <Card>
             <BlockStack gap="200">
-              <Text variant="bodySm" as="p" tone="subdued">
-                Avg Order Value
-              </Text>
-              {fetchingAnalytics ? (
-                <Spinner size="small" />
-              ) : (
-                <Text variant="heading2xl" as="p">
-                  ${avgOrderValue}
-                </Text>
+              <Text variant="bodySm" as="p" tone="subdued">Avg Order Value</Text>
+              {fetchingAnalytics ? <Spinner size="small" /> : (
+                <Text variant="heading2xl" as="p">${avgOrderValue}</Text>
               )}
             </BlockStack>
           </Card>
 
           <Card>
             <BlockStack gap="200">
-              <Text variant="bodySm" as="p" tone="subdued">
-                Store Health
-              </Text>
-              {fetchingEvents ? (
-                <Spinner size="small" />
-              ) : (
-                <Badge tone={storeHealth.tone}>{storeHealth.label}</Badge>
+              <Text variant="bodySm" as="p" tone="subdued">Store Health</Text>
+              {fetchingEvents ? <Spinner size="small" /> : (
+                <BlockStack gap="200">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Badge tone={storeHealth.tone}>{storeHealth.label}</Badge>
+                    {unresolvedCount > 0 && (
+                      <Text variant="headingLg" as="p" tone="critical">
+                        {unresolvedCount}
+                      </Text>
+                    )}
+                  </InlineStack>
+                  <div style={{ width: "100%", backgroundColor: "#f0f0f0", borderRadius: "4px", height: "8px", overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      borderRadius: "4px",
+                      width: unresolvedCount === 0 ? "100%" : unresolvedCount <= 2 ? "60%" : "25%",
+                      backgroundColor: unresolvedCount === 0 ? "#008060" : unresolvedCount <= 2 ? "#ffc453" : "#d72c0d",
+                      transition: "width 0.3s ease",
+                    }} />
+                  </div>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    {unresolvedCount === 0 ? "All systems healthy" : `${unresolvedCount} unresolved alert${unresolvedCount > 1 ? "s" : ""}`}
+                  </Text>
+                </BlockStack>
               )}
             </BlockStack>
           </Card>
         </InlineGrid>
 
-        {/* Recent Alerts */}
         <Card>
           <BlockStack gap="400">
             <InlineStack align="space-between">
-              <Text variant="headingMd" as="h2">
-                Recent Alerts
-              </Text>
-              <Button
-                variant="plain"
-                url="/alerts"
-              >
-                View all
-              </Button>
+              <Text variant="headingMd" as="h2">Recent Alerts</Text>
+              <Button variant="plain" url="/alerts">View all</Button>
             </InlineStack>
-
             <Divider />
-
             {fetchingEvents ? (
               <Spinner size="small" />
             ) : !events || events.length === 0 ? (

@@ -14,10 +14,27 @@ api_version = "2026-04"
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
+topics = [ "shop/update", "app/uninstalled" ]
 
+# Trigger key: handleOrderCreate
 [[webhooks.subscriptions]]
-topics = [ "shop/update", "app/uninstalled", "orders/create", "orders/updated", "checkouts/create", "inventory_levels/update" ]
-uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
+uri = "https://webhooks.gadget-services.net/shopify/v1/handleOrderCreate?domain=observa.gadget.app"
+topics = [ "orders/create" ]
+
+# Trigger key: handleOrderUpdated
+[[webhooks.subscriptions]]
+uri = "https://webhooks.gadget-services.net/shopify/v1/handleOrderUpdated?domain=observa.gadget.app"
+topics = [ "orders/updated" ]
+
+# Trigger key: handleCheckoutCreate
+[[webhooks.subscriptions]]
+uri = "https://webhooks.gadget-services.net/shopify/v1/handleCheckoutCreate?domain=observa.gadget.app"
+topics = [ "checkouts/create" ]
+
+# Trigger key: handleInventoryUpdate
+[[webhooks.subscriptions]]
+uri = "https://webhooks.gadget-services.net/shopify/v1/handleInventoryUpdate?domain=observa.gadget.app"
+topics = [ "inventory_levels/update" ]
 
 [access_scopes]
 scopes = "read_checkouts, read_customers, read_orders, read_analytics, read_products, read_fulfillments, read_merchant_managed_fulfillment_orders, read_reports, read_inventory"
