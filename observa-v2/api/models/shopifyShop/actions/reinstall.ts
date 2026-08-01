@@ -1,6 +1,5 @@
 import { applyParams, save, ActionOptions } from "gadget-server";
 import { preventCrossShopDataAccess } from "gadget-server/shopify";
-import { identifyShop } from "../../../services/mantle";
 
 export const run: ActionRun = async ({ params, record, logger, api, connections }) => {
   applyParams(params, record);
@@ -9,17 +8,21 @@ export const run: ActionRun = async ({ params, record, logger, api, connections 
 };
 
 export const onSuccess: ActionOnSuccess = async ({ params, record, logger, api, connections }) => {
-  try {
-    await identifyShop({ shop: record, api });
-  } catch (err: any) {
-    logger?.error?.("Mantle identify failed: " + (err?.message || String(err)));
-  }
-
-  await api.alertSettings.upsert({
-    shop: {
-      _link: record.id,
-    },
+  // Ensure notification channel exists on reinstall
+  const existing = await api.notificationChannel.findFirst({
+    filter: { shopId: { equals: record.id } },
+    select: { id: true },
   });
+
+  if (!existing) {
+    await api.notificationChannel.create({
+      shop: { _link: record.id },
+      emailEnabled: false,
+      slackEnabled: false,
+      whatsappEnabled: false,
+      checkingFrequency: "60" as any,
+    });
+  }
 };
 
 export const options: ActionOptions = { actionType: "update" };

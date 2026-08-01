@@ -1,4 +1,5 @@
 import * as nodemailer from "nodemailer";
+import { getPlanFromSubscription, getPlanFeatures } from "../services/planFeatures";
 
 export const run: ActionRun = async ({ params, logger, api }) => {
   const {
@@ -23,49 +24,50 @@ export const run: ActionRun = async ({ params, logger, api }) => {
       return { success: false, error: "Missing required parameters" };
     }
 
-    // Check cooldown — don't re-alert if cooldown hasn't passed
+    // Check cooldown
     if (lastTriggeredAt && cooldown) {
       const lastTriggered = new Date(lastTriggeredAt);
       const minutesSinceLastAlert =
         (Date.now() - lastTriggered.getTime()) / 1000 / 60;
       if (minutesSinceLastAlert < cooldown) {
-        logger.info(
-          { ruleId, minutesSinceLastAlert, cooldown },
-          "Rule in cooldown, skipping"
-        );
+        logger.info({ ruleId, minutesSinceLastAlert, cooldown }, "Rule in cooldown, skipping");
         return { success: true, skipped: true, reason: "cooldown" };
       }
     }
 
-    // Calculate the time window start
+    // Get plan for this shop
+    let subscription = null;
+    try {
+      subscription = await api.getActiveShopSubscription({ shopId });
+    } catch (e: any) {
+      logger.warn({ shopId }, "Could not fetch subscription, defaulting to no plan");
+    }
+    const plan = getPlanFromSubscription(subscription);
+    const features = getPlanFeatures(plan);
+
+    logger.info({ shopId, plan }, "Shop plan resolved");
+
+    // Calculate time window
     const windowStart = new Date(Date.now() - timeWindow * 60 * 1000);
 
-    // Fetch recent alert events for this shop and metric within the time window
+    // Fetch recent alert events
     const recentEvents = await api.alertEvent.findMany({
       filter: {
         shopId: { equals: shopId },
         metric: { equals: metric },
         triggeredAt: { greaterThan: windowStart },
+        ruleName: { equals: "webhook-capture" },
       },
-      select: {
-        id: true,
-        metric: true,
-        message: true,
-        triggeredAt: true,
-      },
+      select: { id: true, metric: true, triggeredAt: true },
     });
 
-    logger.info(
-      { ruleId, metric, eventCount: recentEvents.length, timeWindow },
-      "Evaluating rule"
-    );
+    logger.info({ ruleId, metric, eventCount: recentEvents.length, timeWindow }, "Evaluating rule");
 
-    // Evaluate the condition
+    // Evaluate condition
     let breached = false;
     let alertMessage = "";
 
     if (condition === "no_activity") {
-      // No events in the time window = no activity
       breached = recentEvents.length === 0;
       alertMessage = `No ${metric} activity in the last ${timeWindow} minutes`;
     } else if (condition === "below_threshold") {
@@ -75,43 +77,34 @@ export const run: ActionRun = async ({ params, logger, api }) => {
       breached = recentEvents.length > threshold;
       alertMessage = `${metric} count (${recentEvents.length}) is above threshold (${threshold}) in the last ${timeWindow} minutes`;
     } else if (condition === "drops_by_percent") {
-      // Compare current window to previous window of same length
-      const previousWindowStart = new Date(
-        windowStart.getTime() - timeWindow * 60 * 1000
-      );
+      const previousWindowStart = new Date(windowStart.getTime() - timeWindow * 60 * 1000);
       const previousEvents = await api.alertEvent.findMany({
         filter: {
           shopId: { equals: shopId },
           metric: { equals: metric },
-          triggeredAt: {
-            greaterThan: previousWindowStart,
-            lessThan: windowStart,
-          },
+          triggeredAt: { greaterThan: previousWindowStart, lessThan: windowStart },
+          ruleName: { equals: "webhook-capture" },
         },
         select: { id: true },
       });
-
       if (previousEvents.length > 0) {
-        const dropPercent =
-          ((previousEvents.length - recentEvents.length) /
-            previousEvents.length) *
-          100;
+        const dropPercent = ((previousEvents.length - recentEvents.length) / previousEvents.length) * 100;
         breached = dropPercent >= threshold;
         alertMessage = `${metric} dropped ${dropPercent.toFixed(1)}% in the last ${timeWindow} minutes (threshold: ${threshold}%)`;
       }
     }
 
     if (!breached) {
-      logger.info({ ruleId, condition }, "Rule not breached, no alert needed");
+      logger.info({ ruleId, condition }, "Rule not breached");
       return { success: true, breached: false };
     }
 
     logger.info({ ruleId, alertMessage }, "Rule breached, sending alert");
 
-    // Record the alert event
+    // Record alert event
     await api.alertEvent.create({
-      ruleName: ruleName,
-      metric: metric,
+      ruleName,
+      metric,
       message: alertMessage,
       severity: "warning",
       triggeredAt: new Date(),
@@ -119,56 +112,64 @@ export const run: ActionRun = async ({ params, logger, api }) => {
       shop: { _link: shopId },
     });
 
-    // Update lastTriggeredAt on the rule
-    await api.alertRule.update(ruleId, {
-      lastTriggeredAt: new Date(),
-    });
+    // Update lastTriggeredAt
+    await api.alertRule.update(ruleId, { lastTriggeredAt: new Date() });
 
-    // Send notifications
+    // Get notification channel
     const notificationChannel = await api.notificationChannel.findFirst({
       filter: { shopId: { equals: shopId } },
       select: {
         emailRecipients: true,
         slackWebhook: true,
         whatsappNumber: true,
+        emailEnabled: true,
+        slackEnabled: true,
+        whatsappEnabled: true,
       },
     });
 
-    if (notifyEmail && notificationChannel?.emailRecipients) {
+    const channel = notificationChannel as any;
+
+    // Email — available on all plans
+    if (notifyEmail && features.emailNotifications && channel?.emailEnabled && channel?.emailRecipients) {
       await sendEmailAlert({
         shopDomain: shopDomain || "",
-        recipients: notificationChannel.emailRecipients,
+        recipients: channel.emailRecipients,
         ruleName,
         alertMessage,
         logger,
       });
     }
 
-    if (notifySlack && notificationChannel?.slackWebhook) {
+    // Slack — Pro only
+    if (notifySlack && features.slackNotifications && channel?.slackEnabled && channel?.slackWebhook) {
       await sendSlackAlert({
-        webhookUrl: notificationChannel.slackWebhook,
+        webhookUrl: channel.slackWebhook,
         ruleName,
         alertMessage,
         shopDomain: shopDomain || "",
         logger,
       });
+    } else if (notifySlack && !features.slackNotifications) {
+      logger.info({ shopId, plan }, "Slack notifications not available on this plan");
     }
 
-    return { success: true, breached: true, alertMessage };
+    // WhatsApp — Pro only
+    if (notifyWhatsapp && features.whatsappNotifications && channel?.whatsappEnabled && channel?.whatsappNumber) {
+      logger.info({ shopId }, "WhatsApp notification — WAHA integration pending");
+    } else if (notifyWhatsapp && !features.whatsappNotifications) {
+      logger.info({ shopId, plan }, "WhatsApp notifications not available on this plan");
+    }
+
+    return { success: true, breached: true, alertMessage, plan };
   } catch (error: any) {
     logger.error({ error: error.message, ruleId }, "Error processing alert rule");
     throw error;
   }
 };
 
-// Email notification
-async function sendEmailAlert({
-  shopDomain,
-  recipients,
-  ruleName,
-  alertMessage,
-  logger,
-}: any) {
+// Email
+async function sendEmailAlert({ shopDomain, recipients, ruleName, alertMessage, logger }: any) {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_SMTP_HOST,
     port: parseInt(process.env.EMAIL_SMTP_PORT || "465"),
@@ -184,7 +185,7 @@ async function sendEmailAlert({
       <h2 style="color: #e53e3e;">⚠️ Observa Alert: ${ruleName}</h2>
       <p style="font-size: 16px; color: #333;">${alertMessage}</p>
       <p style="color: #666;">Store: <strong>${shopDomain}</strong></p>
-      <a href="https://${shopDomain}/admin" 
+      <a href="https://${shopDomain}/admin"
          style="display:inline-block;padding:12px 24px;background:#000;color:#fff;text-decoration:none;border-radius:6px;margin-top:16px;">
         View Store →
       </a>
@@ -205,14 +206,8 @@ async function sendEmailAlert({
   }
 }
 
-// Slack notification
-async function sendSlackAlert({
-  webhookUrl,
-  ruleName,
-  alertMessage,
-  shopDomain,
-  logger,
-}: any) {
+// Slack
+async function sendSlackAlert({ webhookUrl, ruleName, alertMessage, shopDomain, logger }: any) {
   try {
     await fetch(webhookUrl, {
       method: "POST",

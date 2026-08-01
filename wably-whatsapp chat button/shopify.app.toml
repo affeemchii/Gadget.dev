@@ -5,6 +5,7 @@ name = "wably - whatsApp chat button"
 application_url = "https://wably.gadget.app/api/shopify/install-or-render"
 embedded = true
 
+handle = "wably"
 [auth]
 redirect_urls = [ "https://wably.gadget.app/api/connections/auth/shopify/callback" ]
 
@@ -17,4 +18,4 @@ uri = "https://webhooks.gadget-services.net/shopify/v1?domain=wably.gadget.app"
 topics = [ "shop/update", "app/uninstalled" ]
 
 [access_scopes]
-scopes = "write_script_tags"
+scopes = "read_script_tags, write_script_tags, read_themes, read_customers, read_online_store_pages"

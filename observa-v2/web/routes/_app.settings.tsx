@@ -13,32 +13,24 @@ import {
   Checkbox,
   Divider,
   InlineStack,
+  List,
+  Link,
 } from "@shopify/polaris";
 import { useFindFirst, useAction } from "@gadgetinc/react";
 import { api } from "../api";
 
 export default function SettingsPage() {
-  // Email
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [emailRecipients, setEmailRecipients] = useState("");
-
-  // Slack
   const [slackEnabled, setSlackEnabled] = useState(false);
   const [slackWebhook, setSlackWebhook] = useState("");
-
-  // WhatsApp
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
-
-  // Checking frequency
   const [checkingFrequency, setCheckingFrequency] = useState("60");
-
   const [saved, setSaved] = useState(false);
 
-  // Fetch existing notification channel
   const [{ data: channel, fetching }] = useFindFirst(api.notificationChannel);
 
-  // Populate form when data loads
   useEffect(() => {
     if (channel) {
       const c = channel as any;
@@ -52,12 +44,8 @@ export default function SettingsPage() {
     }
   }, [channel]);
 
-  const [{ fetching: creating }, createChannel] = useAction(
-    api.notificationChannel.create
-  );
-  const [{ fetching: updating }, updateChannel] = useAction(
-    api.notificationChannel.update
-  );
+  const [{ fetching: creating }, createChannel] = useAction(api.notificationChannel.create);
+  const [{ fetching: updating }, updateChannel] = useAction(api.notificationChannel.update);
 
   const saving = creating || updating;
 
@@ -71,7 +59,6 @@ export default function SettingsPage() {
       whatsappNumber,
       checkingFrequency: checkingFrequency as any,
     };
-
     if (channel?.id) {
       await updateChannel({ id: channel.id, ...data });
     } else {
@@ -174,10 +161,36 @@ export default function SettingsPage() {
                 onChange={setSlackWebhook}
                 placeholder="https://hooks.slack.com/services/..."
                 autoComplete="off"
-                helpText="Create an incoming webhook in your Slack workspace settings."
+                helpText="Paste your Slack Incoming Webhook URL here."
                 disabled={!slackEnabled}
               />
             </FormLayout>
+            <BlockStack gap="300">
+              <Text variant="headingSm" as="h3">
+                How to connect Slack
+              </Text>
+              <List type="number">
+                <List.Item>
+                  Go to{" "}
+                  <Link url="https://api.slack.com/apps" external>
+                    api.slack.com/apps
+                  </Link>
+                  {" "}and click Create New App then From scratch
+                </List.Item>
+                <List.Item>
+                  Name your app (e.g. Observa), select your workspace and click Create App
+                </List.Item>
+                <List.Item>
+                  In the left sidebar click Incoming Webhooks and toggle it ON
+                </List.Item>
+                <List.Item>
+                  Click Add New Webhook to Workspace, select a channel and click Allow
+                </List.Item>
+                <List.Item>
+                  Copy the webhook URL that appears and paste it in the field above
+                </List.Item>
+              </List>
+            </BlockStack>
           </BlockStack>
         </Card>
 

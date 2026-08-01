@@ -14,7 +14,7 @@ api_version = "2026-04"
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa.gadget.app"
-topics = [ "shop/update", "app/uninstalled" ]
+topics = [ "app_subscriptions/update", "shop/update", "app/uninstalled" ]
 
 # Trigger key: handleOrderCreate
 [[webhooks.subscriptions]]

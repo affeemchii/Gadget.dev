@@ -1,9 +1,9 @@
 # Learn more about working with Shopify TOML files with Gadget at https://docs.gadget.dev/guides/plugins/shopify/advanced-topics/shopify-app-toml
-client_id = "826d5f9117980f05fccd0d5b3e50a44a"
+client_id = "91d691a8052271cd7cc8f3bd814bb447"
 name = "observa-development"
 application_url = "https://observa--development.gadget.app/api/shopify/install-or-render"
 embedded = true
-handle = "observa-development-2"
+handle = "observa-development"
 
 [auth]
 redirect_urls = [ "https://observa--development.gadget.app/api/connections/auth/shopify/callback" ]
@@ -14,7 +14,7 @@ api_version = "2026-04"
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 uri = "https://webhooks.gadget-services.net/shopify/v1?domain=observa--development.gadget.app"
-topics = [ "shop/update", "app/uninstalled" ]
+topics = [ "app_subscriptions/update", "shop/update", "app/uninstalled" ]
 
 # Trigger key: handleOrderCreate
 [[webhooks.subscriptions]]

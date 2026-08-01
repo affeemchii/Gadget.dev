@@ -1,4 +1,7 @@
-(function () {
+import type { RouteContext } from "gadget-server";
+
+export default async function route({ request, reply }: RouteContext) {
+  const js = `(function () {
   'use strict';
 
   function init() {
@@ -19,7 +22,7 @@
     var whatsappNumber = settings.whatsappNumber;
     var buttonColor = (settings.buttonColor || '#25D366').trim();
     var buttonPosition = settings.buttonPosition || 'bottom-right';
-    var cleanNumber = whatsappNumber.replace(/[\s\-\(\)\+]/g, '');
+    var cleanNumber = whatsappNumber.replace(/[\\s\\-\\(\\)\\+]/g, '');
 
     var button = document.createElement('a');
     button.href = 'https://wa.me/' + cleanNumber;
@@ -61,4 +64,7 @@
   } else {
     init();
   }
-})();
+})();`;
+
+  reply.type('application/javascript').send(js);
+}

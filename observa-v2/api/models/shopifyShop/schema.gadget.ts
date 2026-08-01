@@ -17,21 +17,10 @@ export const schema: GadgetModel = {
       child: { model: "alertRule", belongsToField: "shop" },
       storageKey: "GB5B0045iTTp",
     },
-    alertSettings: {
-      type: "hasOne",
-      child: { model: "alertSettings", belongsToField: "shop" },
-      storageKey: "VVSHX8IsdTNk",
-    },
     disabledWebhooks: {
       type: "json",
       storageKey:
         "ModelField-DataModel-Shopify-Shop-disabled_webhooks::FieldStorageEpoch-DataModel-Shopify-Shop-ModelField-DataModel-Shopify-Shop-disabled_webhooks-initial",
-      filterIndex: false,
-      searchIndex: false,
-    },
-    mantleApiToken: {
-      type: "string",
-      storageKey: "MkKDvRNesWEn",
       filterIndex: false,
       searchIndex: false,
     },
@@ -49,6 +38,7 @@ export const schema: GadgetModel = {
       address1: { filterIndex: false, searchIndex: false },
       address2: { filterIndex: false, searchIndex: false },
       alerts: { filterIndex: false, searchIndex: false },
+      appSubscriptions: true,
       billingAddress: { filterIndex: false, searchIndex: false },
       checkoutApiSupported: {
         filterIndex: false,

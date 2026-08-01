@@ -10,7 +10,7 @@ handle = "wably-development"
 redirect_urls = [ "https://wably--development.gadget.app/api/connections/auth/shopify/callback" ]
 
 [access_scopes]
-scopes = "write_script_tags"
+scopes = "read_script_tags, write_script_tags, read_themes, read_customers, read_online_store_pages"
 
 [webhooks]
 api_version = "2026-04"

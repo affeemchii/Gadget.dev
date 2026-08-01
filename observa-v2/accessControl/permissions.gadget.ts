@@ -26,16 +26,21 @@ export const permissions: GadgetPermissions = {
             update: true,
           },
         },
-        alertSettings: {
-          read: true,
-          actions: {
-            update: true,
-          },
-        },
         notificationChannel: {
           read: true,
           actions: {
             create: true,
+            update: true,
+          },
+        },
+        shopifyAppSubscription: {
+          read: {
+            filter:
+              "accessControl/filters/shopify/shopifyAppSubscription.gelly",
+          },
+          actions: {
+            create: true,
+            delete: true,
             update: true,
           },
         },
@@ -73,6 +78,8 @@ export const permissions: GadgetPermissions = {
         },
       },
       actions: {
+        cancelShopSubscription: true,
+        getActiveShopSubscription: true,
         getAnalytics: true,
       },
     },
